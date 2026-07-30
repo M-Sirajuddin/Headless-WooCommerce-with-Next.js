@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.cache/
+*.env.local
+.env
+*.zip
+.vscode/
+.claude/
+.kiro/
+*.tsbuildinfo
