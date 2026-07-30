@@ -33,7 +33,7 @@ function cwoo_cors_headers() {
     $allowed = [
         'http://localhost:3000',
         'http://localhost:3001',
-        // Add your production domain, e.g. 'https://yourstore.com'
+        'https://headless-woo-commerce-with-next-js.vercel.app',
     ];
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
     if ( in_array( $origin, $allowed, true ) ) {
