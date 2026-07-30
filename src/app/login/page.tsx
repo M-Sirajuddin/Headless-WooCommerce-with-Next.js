@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronRight, Eye, EyeOff, Lock, User, CheckCircle, AlertCircle } from "lucide-react";
@@ -10,7 +10,7 @@ import { setCartItems, clearCart } from "@/store/cartSlice";
 import { loginUser, fetchUserProfile } from "@/lib/auth-api";
 import { loadCartItems, userCartKey } from "@/store/middleware/localStorageMiddleware";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
@@ -240,5 +240,19 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="bg-[#f7f7f7] min-h-[calc(100vh-140px)] flex items-center justify-center text-xs text-black/65 font-sans pb-16">
+        <div className="w-full max-w-[460px] border border-black/10 bg-white p-8 md:p-10 shadow-sm text-center">
+          Loading...
+        </div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }

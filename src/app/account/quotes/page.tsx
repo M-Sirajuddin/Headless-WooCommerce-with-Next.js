@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { fetchQuoteRequests, submitQuoteRequest, submitMultiQuoteRequest } from "@/lib/auth-api";
@@ -34,7 +34,7 @@ const STATUS_COLOR: Record<string, string> = {
   declined: "bg-red-100 text-red-800",
 };
 
-export default function QuotesPage() {
+function QuotesContent() {
   const dispatch = useAppDispatch();
   const token = useAppSelector((state) => state.auth.token);
   const quoteItems = useAppSelector((state) => state.quote.items);
@@ -340,5 +340,17 @@ export default function QuotesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function QuotesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-black/30" />
+      </div>
+    }>
+      <QuotesContent />
+    </Suspense>
   );
 }
