@@ -1456,7 +1456,12 @@ function cwoo_filter_products_run( WP_REST_Request $req ) {
 // ── HEADLESS FRONTEND URL ─────────────────────────────────────
 // Set this to your Next.js site origin (no trailing slash).
 if ( ! defined( 'CWOO_FRONTEND_URL' ) ) {
-    define( 'CWOO_FRONTEND_URL', 'http://localhost:3000' );
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? $_SERVER['HTTP_REFERER'] ?? '';
+    if ( strpos( $origin, 'localhost' ) !== false ) {
+        define( 'CWOO_FRONTEND_URL', 'http://localhost:3000' );
+    } else {
+        define( 'CWOO_FRONTEND_URL', 'https://headless-woo-commerce-with-next-js.vercel.app' );
+    }
 }
 
 // ── ORDER STATUS (for the headless thank-you page) ────────────
@@ -1494,33 +1499,11 @@ function cwoo_order_status( WP_REST_Request $req ) {
     ] );
 }
 
+// ── AFTER PAYMENT → RETURN TO HEADLESS THANK-YOU PAGE ─────────
 add_filter( 'woocommerce_get_return_url', 'cwoo_headless_return_url', 10, 2 );
 function cwoo_headless_return_url( $url, $order ) {
     if ( ! $order ) return $url;
-
-    $frontend_url = CWOO_FRONTEND_URL;
-    $allowed_origins = [
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'https://headless-woo-commerce-with-next-js.vercel.app'
-    ];
-
-    $referer = $_SERVER['HTTP_REFERER'] ?? '';
-    if ( ! empty( $referer ) ) {
-        foreach ( $allowed_origins as $origin ) {
-            if ( strpos( $referer, $origin ) === 0 ) {
-                $frontend_url = $origin;
-                break;
-            }
-        }
-    }
-
-    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-    if ( ! empty( $origin ) && in_array( $origin, $allowed_origins, true ) ) {
-        $frontend_url = $origin;
-    }
-
-    return trailingslashit( $frontend_url )
+    return trailingslashit( CWOO_FRONTEND_URL )
         . 'checkout/thank-you?order=' . $order->get_id()
         . '&key=' . rawurlencode( $order->get_order_key() );
 }
