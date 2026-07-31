@@ -241,7 +241,6 @@ active. Add the frontend origin to the CORS allow-list in the snippet.
 
 - **Maintenance mode:** `CWOO_MAINTENANCE_MODE = true` returns 503 for all REST;
   the frontend serves disk-cached content + a banner and disables cart/checkout.
-- **`.cache/`** (disk cache) is git-ignored; server components fall back to it
-  when the API is unreachable.
-- **Re-paste the PHP snippet** whenever backend routes/behaviors change — the
-  frontend depends on `custom-woo/v1`.
+- **Cache-First Server Caching:** The server retrieves API data from `.cache/` on disk first, resulting in fast pages and low load on the WooCommerce API.
+- **Webhook Cache Invalidation:** The server exposes a `/api/webhook` POST endpoint. Configure a WooCommerce webhook on WordPress for `product.updated`, `product.created`, and `product.deleted` targeting this endpoint. This automatically updates or deletes cached files incrementally on the server on any product change.
+- **Re-paste the PHP snippet** whenever backend routes/behaviors change — the frontend depends on `custom-woo/v1`.
