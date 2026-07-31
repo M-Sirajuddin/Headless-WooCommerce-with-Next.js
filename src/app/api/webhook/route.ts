@@ -7,6 +7,11 @@ import { mapProduct } from '@/lib/graphql/fetcher';
 export async function POST(req: NextRequest) {
   try {
     const topic = req.headers.get('x-wc-webhook-topic');
+
+    if (topic === 'webhook.test') {
+      return NextResponse.json({ success: true, action: 'test' });
+    }
+
     const arrayBuffer = await req.arrayBuffer();
     const rawBodyBuffer = Buffer.from(arrayBuffer);
 
@@ -34,10 +39,6 @@ export async function POST(req: NextRequest) {
           secretLength: secret.length
         }, { status: 401 });
       }
-    }
-
-    if (topic === 'webhook.test') {
-      return NextResponse.json({ success: true, action: 'test' });
     }
 
     const body = JSON.parse(rawBodyBuffer.toString('utf-8'));
