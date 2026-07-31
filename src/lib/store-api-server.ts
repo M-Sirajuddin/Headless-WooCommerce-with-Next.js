@@ -21,8 +21,8 @@ export async function getStoreProductsCached(
     const result = await _getStoreProducts(query);
     writeCache(key, result);
     return result;
-  } catch {
-    return { items: [], total: 0, totalPages: 1 };
+  } catch (err) {
+    throw err;
   }
 }
 
@@ -34,8 +34,8 @@ export async function getStoreCategoriesCached(perPage = 20): Promise<StoreApiCa
     const result = await _getStoreCategories(perPage);
     writeCache(key, result);
     return result;
-  } catch {
-    return [];
+  } catch (err) {
+    throw err;
   }
 }
 
@@ -49,8 +49,8 @@ export async function getFilteredStoreProductsCached(
     const result = await _getFilteredStoreProducts(query);
     writeCache(key, result);
     return result;
-  } catch {
-    return { items: [], total: 0, totalPages: 1 };
+  } catch (err) {
+    throw err;
   }
 }
 
@@ -62,8 +62,8 @@ export async function getAllStoreCategoriesCached(): Promise<StoreApiCategory[]>
     const result = await _getAllStoreCategories();
     writeCache(key, result);
     return result;
-  } catch {
-    return [];
+  } catch (err) {
+    throw err;
   }
 }
 

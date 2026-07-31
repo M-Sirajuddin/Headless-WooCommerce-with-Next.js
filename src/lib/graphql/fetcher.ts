@@ -9,7 +9,7 @@ import { deepDecodeHtmlEntities } from '@/lib/utils';
 import { readCache, writeCache } from '@/lib/api-cache';
 
 const STORE_API = `${REST_URL.replace(/\/$/, '')}/wc/store/v1`;
-const FETCH_TIMEOUT_MS = 7000;
+const FETCH_TIMEOUT_MS = 15000;
 
 function fetchWithTimeout(url: string, options: RequestInit & { next?: any } = {}): Promise<Response> {
   const controller = new AbortController();
@@ -124,8 +124,8 @@ export async function getProducts(
     };
     writeCache(cacheKey, result);
     return result;
-  } catch {
-    return { edges: [], pageInfo: { hasNextPage: false, endCursor: null } };
+  } catch (err) {
+    throw err;
   }
 }
 
@@ -138,8 +138,8 @@ export async function getProduct(slug: string): Promise<Product | null> {
     const product = data && data.length > 0 ? mapProduct(data[0]) : null;
     if (product) writeCache(cacheKey, product);
     return product;
-  } catch {
-    return null;
+  } catch (err) {
+    throw err;
   }
 }
 

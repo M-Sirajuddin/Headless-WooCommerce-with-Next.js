@@ -67,7 +67,7 @@ export interface StoreProductsResult {
 
 const STORE_API_BASE = `${REST_URL.replace(/\/$/, "")}/wc/store/v1`;
 
-const FETCH_TIMEOUT_MS = 7000;
+const FETCH_TIMEOUT_MS = 15000;
 
 function fetchWithTimeout(url: string, options: RequestInit & { next?: any } = {}): Promise<Response> {
   const controller = new AbortController();
