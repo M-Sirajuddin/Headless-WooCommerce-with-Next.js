@@ -1,12 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import crypto from 'crypto';
 import { updateProductInCache, deleteProductFromCache, writeCache } from '@/lib/api-cache';
 import { mapProduct } from '@/lib/graphql/fetcher';
 
 export async function POST(req: NextRequest) {
   try {
     const topic = req.headers.get('x-wc-webhook-topic');
-    const body = await req.json();
+    const rawBody = await req.text();
+
+    // Verify WooCommerce webhook signature if a secret is configured
+    const secret = process.env.WC_WEBHOOK_SECRET;
+    if (secret) {
+      const signature = req.headers.get('x-wc-webhook-signature');
+      const computedSignature = crypto
+        .createHmac('sha256', secret)
+        .update(rawBody)
+        .digest('base64');
+
+      if (signature !== computedSignature) {
+        return NextResponse.json({ error: 'Unauthorized signature' }, { status: 401 });
+      }
+    }
+
+    const body = JSON.parse(rawBody);
 
     if (!body || !body.id) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
@@ -34,7 +51,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, action: 'delete', productId });
     }
 
-    if (topic === 'product.updated' || topic === 'product.created') {
+    if (topic === 'product.updated' || topic === 'product.created' || topic === 'product.restored') {
       const price = body.price || '0';
       const regularPrice = body.regular_price || price;
       const salePrice = body.sale_price || '';
