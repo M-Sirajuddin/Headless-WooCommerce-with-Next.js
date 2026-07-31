@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   description: "Browse the full catalog of curated products.",
 };
 
-export const revalidate = 60;
+export const revalidate = 86400;
 
 const SORT_OPTIONS = [
   { value: "date-desc", label: "Default sorting", orderby: "date", order: "desc" },

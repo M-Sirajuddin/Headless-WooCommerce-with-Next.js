@@ -17,7 +17,7 @@ import ProductGallery from '@/components/ProductGallery';
 import ShareButton from '@/components/ui/ShareButton';
 import AddToQuoteButton from '@/components/ui/AddToQuoteButton';
 
-export const revalidate = 60;
+export const revalidate = 86400;
 export const dynamicParams = true;
 
 interface PageProps {

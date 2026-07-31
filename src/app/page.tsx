@@ -16,8 +16,8 @@ import { STATIC_PRODUCT_LIMIT, GRAPHQL_URL } from "@/lib/env";
 import { getProducts } from "@/lib/graphql/fetcher";
 import type { Product } from "@/types/woocommerce";
 
-// ISR: regenerate this page at most once per `ISR_REVALIDATE_SECONDS`
-export const revalidate = 60;
+// ISR: cache globally for 24 hours, purged on-demand via webhook
+export const revalidate = 86400;
 
 const CATEGORIES = [
   { label: "Dabs",        slug: "dabs",             bg: "bg-sky-500",     text: "text-white" },

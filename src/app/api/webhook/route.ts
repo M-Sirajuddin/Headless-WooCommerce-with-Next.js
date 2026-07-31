@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { updateProductInCache, deleteProductFromCache, writeCache } from '@/lib/api-cache';
 import { mapProduct } from '@/lib/graphql/fetcher';
 
@@ -15,6 +16,21 @@ export async function POST(req: NextRequest) {
 
     if (topic === 'product.deleted') {
       deleteProductFromCache(productId);
+      
+      // Purge CDN caches on-demand
+      try {
+        revalidatePath('/products');
+        revalidatePath('/');
+        if (body.slug) {
+          revalidatePath(`/product/${body.slug}`);
+        }
+        if (body.categories && Array.isArray(body.categories)) {
+          body.categories.forEach((cat: any) => {
+            if (cat.slug) revalidatePath(`/category/${cat.slug}`);
+          });
+        }
+      } catch {}
+
       return NextResponse.json({ success: true, action: 'delete', productId });
     }
 
@@ -81,6 +97,18 @@ export async function POST(req: NextRequest) {
 
       // 3. Update the product inside graphql lists / search results caches (Product format)
       updateProductInCache(productId, mappedProduct);
+
+      // 4. Purge Vercel/Next.js CDN caches on-demand
+      try {
+        revalidatePath(`/product/${body.slug}`);
+        revalidatePath('/products');
+        revalidatePath('/');
+        if (body.categories && Array.isArray(body.categories)) {
+          body.categories.forEach((cat: any) => {
+            if (cat.slug) revalidatePath(`/category/${cat.slug}`);
+          });
+        }
+      } catch {}
 
       return NextResponse.json({ success: true, action: 'update', productId });
     }
