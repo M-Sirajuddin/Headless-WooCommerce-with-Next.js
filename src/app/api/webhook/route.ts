@@ -26,11 +26,16 @@ export async function POST(req: NextRequest) {
         .digest('base64');
 
       if (signature !== computedSignature) {
+        const headersObj: any = {};
+        req.headers.forEach((val, key) => {
+          headersObj[key] = val;
+        });
         console.error('Signature verification failed!', {
           receivedHeader: signature,
           computedLocal: computedSignature,
           envSecretLength: secret.length,
           envSecretFirst3: secret.substring(0, 3),
+          allHeaders: headersObj,
         });
         return NextResponse.json({ 
           error: 'Unauthorized signature',
