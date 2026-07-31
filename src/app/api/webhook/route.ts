@@ -7,7 +7,8 @@ import { mapProduct } from '@/lib/graphql/fetcher';
 export async function POST(req: NextRequest) {
   try {
     const topic = req.headers.get('x-wc-webhook-topic');
-    const rawBody = await req.text();
+    const arrayBuffer = await req.arrayBuffer();
+    const rawBodyBuffer = Buffer.from(arrayBuffer);
 
     // Verify WooCommerce webhook signature if a secret is configured
     const secret = process.env.WC_WEBHOOK_SECRET;
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
       const signature = req.headers.get('x-wc-webhook-signature');
       const computedSignature = crypto
         .createHmac('sha256', secret)
-        .update(rawBody)
+        .update(rawBodyBuffer)
         .digest('base64');
 
       if (signature !== computedSignature) {
@@ -23,7 +24,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const body = JSON.parse(rawBody);
+    if (topic === 'webhook.test') {
+      return NextResponse.json({ success: true, action: 'test' });
+    }
+
+    const body = JSON.parse(rawBodyBuffer.toString('utf-8'));
 
     if (!body || !body.id) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
