@@ -7,8 +7,13 @@ import { mapProduct } from '@/lib/graphql/fetcher';
 export async function POST(req: NextRequest) {
   try {
     const topic = req.headers.get('x-wc-webhook-topic');
+    const userAgent = req.headers.get('user-agent') || '';
 
-    if (topic === 'webhook.test') {
+    // Handle WooCommerce test/ping requests (which often do not include custom headers)
+    if (
+      topic === 'webhook.test' ||
+      (!topic && userAgent.includes('WooCommerce') && userAgent.includes('Hookshot'))
+    ) {
       return NextResponse.json({ success: true, action: 'test' });
     }
 
