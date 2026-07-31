@@ -35,3 +35,119 @@ export function writeCache<T>(key: string, data: T): void {
     fs.writeFileSync(cacheFile(key), JSON.stringify({ data, ts: Date.now() }), 'utf-8');
   } catch {}
 }
+
+/**
+ * Recursively updates any object matching databaseId or id in JSON files.
+ */
+export function updateProductInCache(productId: number, updatedFields: Partial<any>): void {
+  try {
+    if (!fs.existsSync(CACHE_DIR)) return;
+    const files = fs.readdirSync(CACHE_DIR);
+    for (const file of files) {
+      if (!file.endsWith('.json')) continue;
+      const filePath = path.join(CACHE_DIR, file);
+      try {
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        const content = JSON.parse(raw);
+        let modified = false;
+
+        const updateObj = (obj: any): boolean => {
+          if (obj && typeof obj === 'object') {
+            const matchesId = 
+              obj.id === productId || 
+              obj.id === String(productId) ||
+              obj.databaseId === productId ||
+              obj.databaseId === String(productId);
+
+            if (matchesId) {
+              Object.assign(obj, updatedFields);
+              return true;
+            }
+            let childModified = false;
+            for (const k of Object.keys(obj)) {
+              if (updateObj(obj[k])) {
+                childModified = true;
+              }
+            }
+            return childModified;
+          }
+          return false;
+        };
+
+        if (updateObj(content)) {
+          fs.writeFileSync(filePath, JSON.stringify(content), 'utf-8');
+        }
+      } catch {
+        // Skip corrupted or unreadable cache files
+      }
+    }
+  } catch {}
+}
+
+/**
+ * Recursively removes a product matching databaseId or id from arrays in JSON files,
+ * or deletes the cache file if it's the individual product page cache.
+ */
+export function deleteProductFromCache(productId: number): void {
+  try {
+    if (!fs.existsSync(CACHE_DIR)) return;
+    const files = fs.readdirSync(CACHE_DIR);
+    for (const file of files) {
+      if (!file.endsWith('.json')) continue;
+      const filePath = path.join(CACHE_DIR, file);
+
+      // If it's the individual product cache file, delete it
+      if (file.startsWith(`gql_product_`)) {
+        try {
+          const raw = fs.readFileSync(filePath, 'utf-8');
+          const content = JSON.parse(raw);
+          if (content.data?.databaseId === productId || content.data?.id === String(productId)) {
+            fs.unlinkSync(filePath);
+            continue;
+          }
+        } catch {}
+      }
+
+      try {
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        const content = JSON.parse(raw);
+
+        const filterObj = (obj: any): boolean => {
+          if (obj && typeof obj === 'object') {
+            let childModified = false;
+            for (const k of Object.keys(obj)) {
+              if (Array.isArray(obj[k])) {
+                const prevLen = obj[k].length;
+                obj[k] = obj[k].filter((item: any) => {
+                  if (item && typeof item === 'object') {
+                    const matchesId = 
+                      item.id === productId || 
+                      item.id === String(productId) ||
+                      item.databaseId === productId ||
+                      item.databaseId === String(productId);
+                    return !matchesId;
+                  }
+                  return true;
+                });
+                if (obj[k].length !== prevLen) {
+                  childModified = true;
+                }
+              } else if (typeof obj[k] === 'object') {
+                if (filterObj(obj[k])) {
+                  childModified = true;
+                }
+              }
+            }
+            return childModified;
+          }
+          return false;
+        };
+
+        if (filterObj(content)) {
+          fs.writeFileSync(filePath, JSON.stringify(content), 'utf-8');
+        }
+      } catch {}
+    }
+  } catch {}
+}
+

@@ -36,7 +36,7 @@ async function storeApiFetch<T>(
 }
 
 // Map Store API product shape → shared Product type
-function mapProduct(p: any): Product {
+export function mapProduct(p: any): Product {
   const minorUnit = p.prices?.currency_minor_unit ?? 2;
   const factor = 10 ** minorUnit;
 
@@ -105,6 +105,8 @@ export async function getProducts(
   }
 
   const cacheKey = `gql_products_p${page}_pp${first}`;
+  const cached = readCache<ProductConnection>(cacheKey);
+  if (cached) return cached;
 
   try {
     const { data, headers } = await storeApiFetch<any[]>('products', {
@@ -123,20 +125,21 @@ export async function getProducts(
     writeCache(cacheKey, result);
     return result;
   } catch {
-    const cached = readCache<ProductConnection>(cacheKey);
-    return cached ?? { edges: [], pageInfo: { hasNextPage: false, endCursor: null } };
+    return { edges: [], pageInfo: { hasNextPage: false, endCursor: null } };
   }
 }
 
 export async function getProduct(slug: string): Promise<Product | null> {
   const cacheKey = `gql_product_${slug}`;
+  const cached = readCache<Product>(cacheKey);
+  if (cached) return cached;
   try {
     const { data } = await storeApiFetch<any[]>('products', { slug });
     const product = data && data.length > 0 ? mapProduct(data[0]) : null;
     if (product) writeCache(cacheKey, product);
     return product;
   } catch {
-    return readCache<Product>(cacheKey) ?? null;
+    return null;
   }
 }
 

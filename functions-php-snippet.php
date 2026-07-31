@@ -1510,7 +1510,7 @@ function cwoo_order_status( WP_REST_Request $req ) {
     $items = [];
     foreach ( $order->get_items() as $item ) {
         $items[] = [
-            'name'     => html_entity_decode( $item->get_name(), ENT_QUOTES | ENT_HTML5 ),
+            'name'     => $item->get_name(),
             'quantity' => $item->get_quantity(),
             'total'    => $sym . number_format( (float) $item->get_total(), 2 ),
         ];

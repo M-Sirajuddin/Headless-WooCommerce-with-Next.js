@@ -30,8 +30,14 @@ export function formatCustomerMoney(value: number, currency = "USD"): string {
   }
 }
 
+// Persist resolved prices per user so a page reload / re-navigation shows them
+// instantly (no "Loading price…" flash) and doesn't re-hit the backend.
+const PRICE_TTL_MS = 30 * 60 * 1000; // 30 min — refresh in the background after this
+const priceKey = (userId: number | undefined) => `woo_prices_${userId ?? "guest"}`;
+
 export function CustomerPricingProvider({ children }: { children: ReactNode }) {
   const token = useAppSelector((state) => state.auth.token);
+  const userId = useAppSelector((state) => state.auth.user?.id);
   const [prices, setPrices] = useState<Record<string, CustomerPrice>>({});
 
   // IDs already sent to the server (so we never re-request the same product).
@@ -40,12 +46,56 @@ export function CustomerPricingProvider({ children }: { children: ReactNode }) {
   const pending = useRef<Set<number>>(new Set());
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Reset everything when the user logs in/out — prices are per-user.
-  useEffect(() => {
-    setPrices({});
+  // Track previous token and user ID to reset caches during render phase.
+  // This avoids parent useEffect race conditions with child register calls on reload.
+  const prevToken = useRef<string | null>(null);
+  const prevUserId = useRef<number | undefined>(undefined);
+
+  if (prevToken.current !== token || prevUserId.current !== userId) {
+    prevToken.current = token;
+    prevUserId.current = userId;
     requested.current = new Set();
     pending.current = new Set();
-  }, [token]);
+  }
+
+  // On login / reload: hydrate cached prices immediately, and only skip the
+  // network for a product if the cache is still fresh (< TTL).
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      setPrices({});
+      return;
+    }
+    try {
+      const raw = localStorage.getItem(priceKey(userId));
+      if (raw) {
+        const { prices: cached, ts } = JSON.parse(raw);
+        if (cached && typeof cached === "object") {
+          setPrices(cached);
+          // Fresh cache → treat these ids as already-fetched (no re-request).
+          if (Date.now() - (ts || 0) < PRICE_TTL_MS) {
+            Object.keys(cached).forEach((id) => requested.current.add(Number(id)));
+          }
+          return;
+        }
+      }
+    } catch {
+      /* ignore corrupt cache */
+    }
+    setPrices({});
+  }, [token, userId]);
+
+  // Persist prices whenever they change.
+  useEffect(() => {
+    if (typeof window === "undefined" || !token) return;
+    try {
+      localStorage.setItem(
+        priceKey(userId),
+        JSON.stringify({ prices, ts: Date.now() })
+      );
+    } catch {
+      /* quota / private mode */
+    }
+  }, [prices, token, userId]);
 
   const flush = useCallback(() => {
     if (!token) return;
