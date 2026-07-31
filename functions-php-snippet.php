@@ -702,18 +702,32 @@ function cwoo_customer_prices( WP_REST_Request $req ) {
         return new WP_Error( 'missing_data', 'ids (array) is required.', [ 'status' => 400 ] );
     }
 
+    $uid = get_current_user_id();
+    $transient_key = 'cwoo_prices_user_' . $uid;
+    $cached = get_transient( $transient_key );
+    if ( ! is_array( $cached ) ) {
+        $cached = [];
+    }
+
     // Ensure WooCommerce has a customer object bound to the authed user so
     // role/group/customer pricing rules resolve correctly.
     if ( function_exists( 'WC' ) && null === WC()->customer ) {
-        WC()->customer = new WC_Customer( get_current_user_id(), true );
+        WC()->customer = new WC_Customer( $uid, true );
     }
 
     $currency = get_woocommerce_currency();
     $out = [];
+    $needs_save = false;
 
     foreach ( $ids as $raw_id ) {
         $pid = absint( $raw_id );
         if ( ! $pid ) continue;
+
+        if ( isset( $cached[ $pid ] ) ) {
+            $out[ (string) $pid ] = $cached[ $pid ];
+            continue;
+        }
+
         $product = wc_get_product( $pid );
         if ( ! $product ) continue;
 
@@ -723,12 +737,20 @@ function cwoo_customer_prices( WP_REST_Request $req ) {
         $regular = $product->get_regular_price();
         $sale    = $product->get_sale_price();
 
-        $out[ (string) $pid ] = [
+        $item = [
             'price'        => is_numeric( $price )   ? (float) $price   : null,
             'regularPrice' => is_numeric( $regular ) ? (float) $regular : null,
             'salePrice'    => is_numeric( $sale )    ? (float) $sale    : null,
             'currency'     => $currency,
         ];
+
+        $out[ (string) $pid ] = $item;
+        $cached[ $pid ] = $item;
+        $needs_save = true;
+    }
+
+    if ( $needs_save ) {
+        set_transient( $transient_key, $cached, 12 * HOUR_IN_SECONDS );
     }
 
     return rest_ensure_response( $out );
@@ -1468,6 +1490,15 @@ function cwoo_filter_products_run( WP_REST_Request $req ) {
         $args['meta_query'] = $meta_query;
     }
 
+    $cache_key = 'cwoo_query_' . md5( serialize( $args ) );
+    $cached = get_transient( $cache_key );
+    if ( is_array( $cached ) ) {
+        $response = rest_ensure_response( $cached['items'] );
+        $response->header( 'X-WP-Total', $cached['total'] );
+        $response->header( 'X-WP-TotalPages', $cached['totalPages'] );
+        return $response;
+    }
+
     $query = new WP_Query( $args );
     $items = [];
     foreach ( $query->posts as $post ) {
@@ -1476,6 +1507,13 @@ function cwoo_filter_products_run( WP_REST_Request $req ) {
             $items[] = cwoo_map_store_product( $product );
         }
     }
+
+    $to_cache = [
+        'items'      => $items,
+        'total'      => (int) $query->found_posts,
+        'totalPages' => (int) $query->max_num_pages,
+    ];
+    set_transient( $cache_key, $to_cache, 12 * HOUR_IN_SECONDS );
 
     $response = rest_ensure_response( $items );
     $response->header( 'X-WP-Total', (int) $query->found_posts );
@@ -1897,5 +1935,12 @@ function cwoo_override_cart_contents_temp( $cart_contents ) {
     }
     return $cart_contents;
 }
-
-
+// Clear cached pricing and query transients when products are updated, created, or deleted
+add_action( 'woocommerce_update_product', 'cwoo_clear_transients_cache' );
+add_action( 'woocommerce_new_product', 'cwoo_clear_transients_cache' );
+add_action( 'woocommerce_trash_product', 'cwoo_clear_transients_cache' );
+function cwoo_clear_transients_cache() {
+    global $wpdb;
+    $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_cwoo_prices_user_%' OR option_name LIKE '_transient_timeout_cwoo_prices_user_%'" );
+    $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_cwoo_query_%' OR option_name LIKE '_transient_timeout_cwoo_query_%'" );
+}
