@@ -1,6 +1,7 @@
 "use client";
 
 import PriceDisplay from "@/components/ui/PriceDisplay";
+import { useAppSelector } from "@/hooks/redux";
 import { useCustomerPrice, formatCustomerMoney } from "@/context/CustomerPricing";
 
 interface Props {
@@ -25,7 +26,13 @@ export default function CustomerPriceDisplay({
   className,
   size,
 }: Props) {
+  const token = useAppSelector((s) => s.auth.token);
   const cp = useCustomerPrice(productId);
+
+  // For logged-in users, don't flash the default price while the real one loads.
+  if (token && cp === undefined) {
+    return <span className="inline-block h-7 w-24 animate-pulse rounded bg-black/10" aria-label="Loading price" />;
+  }
 
   const finalPrice = cp?.price != null ? formatCustomerMoney(cp.price, cp.currency) : price;
   const finalRegular =

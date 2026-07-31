@@ -50,6 +50,32 @@ function cwoo_cors_headers() {
     }
 }
 
+// ── EXCLUDE "marketing-materials" FROM GENERAL LISTINGS ──────
+// These products should only appear on /category/marketing-materials. Exclude
+// them from every Store API product listing (home, shop, search) UNLESS the
+// request explicitly asks for that category.
+add_filter( 'woocommerce_store_api_product_query', 'cwoo_exclude_marketing_materials', 10, 2 );
+function cwoo_exclude_marketing_materials( $args, $request ) {
+    $term = get_term_by( 'slug', 'marketing-materials', 'product_cat' );
+    if ( ! $term ) return $args;
+
+    $requested = $request['category'] ?? '';
+    if ( is_string( $requested ) ) $requested = explode( ',', $requested );
+    $requested = array_map( 'absint', (array) $requested );
+    if ( in_array( (int) $term->term_id, $requested, true ) ) return $args;
+
+    if ( empty( $args['tax_query'] ) || ! is_array( $args['tax_query'] ) ) {
+        $args['tax_query'] = [];
+    }
+    $args['tax_query'][] = [
+        'taxonomy' => 'product_cat',
+        'field'    => 'term_id',
+        'terms'    => [ (int) $term->term_id ],
+        'operator' => 'NOT IN',
+    ];
+    return $args;
+}
+
 // ── STORE API (headless cart) ────────────────────────────────
 // The decoupled Next.js frontend talks to /wc/store/v1/cart cross-origin and
 // authenticates each cart with the Cart-Token header instead of a cookie nonce.
@@ -1424,6 +1450,10 @@ function cwoo_filter_products_run( WP_REST_Request $req ) {
     if ( ! empty( $brands ) ) {
         $tax_query[] = [ 'taxonomy' => 'product_brand', 'field' => 'slug', 'terms' => $brands, 'operator' => 'IN' ];
     }
+    // Exclude marketing-materials unless explicitly requested by slug.
+    if ( ! in_array( 'marketing-materials', $categories, true ) ) {
+        $tax_query[] = [ 'taxonomy' => 'product_cat', 'field' => 'slug', 'terms' => [ 'marketing-materials' ], 'operator' => 'NOT IN' ];
+    }
     if ( count( $tax_query ) > 1 ) $args['tax_query'] = $tax_query;
 
     $meta_query = [];
@@ -1480,7 +1510,7 @@ function cwoo_order_status( WP_REST_Request $req ) {
     $items = [];
     foreach ( $order->get_items() as $item ) {
         $items[] = [
-            'name'     => $item->get_name(),
+            'name'     => html_entity_decode( $item->get_name(), ENT_QUOTES | ENT_HTML5 ),
             'quantity' => $item->get_quantity(),
             'total'    => $sym . number_format( (float) $item->get_total(), 2 ),
         ];

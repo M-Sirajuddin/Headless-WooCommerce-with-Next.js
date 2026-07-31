@@ -9,6 +9,7 @@ import QuickViewModal, { QuickViewProduct } from "@/components/ui/QuickViewModal
 import AddToCartButton from "@/components/ui/AddToCartButton";
 import type { Product } from "@/types/woocommerce";
 import { useCustomerPrice, formatCustomerMoney } from "@/context/CustomerPricing";
+import { useAppSelector } from "@/hooks/redux";
 
 function getFormattedRegularPrice(product: StoreApiProduct): string | null {
   const { regular_price, currency_code, currency_minor_unit } = product.prices;
@@ -34,7 +35,9 @@ export default function StoreProductCard({
   product: StoreApiProduct;
 }) {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
+  const token = useAppSelector((s) => s.auth.token);
   const cp = useCustomerPrice(product.id);
+  const priceLoading = !!token && cp === undefined;
   const basePrice = useMemo(() => formatStorePrice(product), [product]);
   const baseRegularPrice = useMemo(() => getFormattedRegularPrice(product), [product]);
   const price = cp?.price != null ? formatCustomerMoney(cp.price, cp.currency) : basePrice;
@@ -135,8 +138,12 @@ export default function StoreProductCard({
       </div>
 
       <div className="mt-3 flex items-center gap-2">
+        {priceLoading ? (
+          <span className="inline-block h-6 w-20 animate-pulse rounded bg-black/10" aria-label="Loading price" />
+        ) : (
         <span className="text-lg font-black text-black">{price}</span>
-        {showSale ? (
+        )}
+        {!priceLoading && showSale ? (
           <span className="text-sm text-black/40 line-through">{regularPrice}</span>
         ) : null}
       </div>

@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle, Loader2, AlertCircle, Clock } from "lucide-react";
+import { CheckCircle, Loader2, AlertCircle, Clock, XCircle } from "lucide-react";
 import { getOrderStatus, type OrderStatus } from "@/lib/auth-api";
 
 function ThankYouContent() {
@@ -50,23 +50,38 @@ function ThankYouContent() {
     );
   }
 
-  const paid = data.isPaid;
+  const status = (data.status || "").toUpperCase();
+  const isFailed = status === "FAILED" || status === "CANCELLED";
+  const isSuccess = data.isPaid || status === "ON-HOLD" || status === "PROCESSING" || status === "COMPLETED";
+  // Pending = still awaiting payment.
+
+  const icon = isFailed ? (
+    <XCircle className="h-16 w-16 text-red-500" strokeWidth={1.5} />
+  ) : isSuccess ? (
+    <CheckCircle className="h-16 w-16 text-emerald-500" strokeWidth={1.5} />
+  ) : (
+    <Clock className="h-16 w-16 text-amber-500" strokeWidth={1.5} />
+  );
+
+  const heading = isFailed
+    ? "Payment failed"
+    : isSuccess
+      ? "Thank you for your order!"
+      : "Order received";
+
+  const message = isFailed
+    ? "Your payment could not be processed. Please try again or use another payment method."
+    : isSuccess
+      ? "Your order is confirmed. A confirmation has been sent to your email."
+      : "Your order is awaiting payment confirmation. We'll email you once it's processed.";
 
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-[640px] flex-col items-center px-4 py-16 text-center">
-      {paid ? (
-        <CheckCircle className="h-16 w-16 text-emerald-500" strokeWidth={1.5} />
-      ) : (
-        <Clock className="h-16 w-16 text-amber-500" strokeWidth={1.5} />
-      )}
+      {icon}
       <h1 className="mt-6 text-3xl font-black uppercase tracking-tight text-black">
-        {paid ? "Thank you for your order!" : "Order received"}
+        {heading}
       </h1>
-      <p className="mt-3 text-sm text-black/65">
-        {paid
-          ? "Your payment was successful. A confirmation has been sent to your email."
-          : "Your order is awaiting payment confirmation. We'll email you once it's processed."}
-      </p>
+      <p className="mt-3 text-sm text-black/65">{message}</p>
 
       <div className="mt-8 w-full border border-black/10 bg-[#fafafa] p-6 text-left">
         <div className="flex justify-between border-b border-black/10 pb-3 text-sm">

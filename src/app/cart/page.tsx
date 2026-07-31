@@ -132,7 +132,7 @@ export default function CartPage() {
                 <div>
                   <Link
                     href={item.slug ? `/product/${item.slug}` : "/products"}
-                    className="text-xl font-semibold tracking-tight text-black"
+                    className="text-sm font-medium leading-5 text-black hover:text-[#d93b2e]"
                   >
                     {item.name}
                   </Link>

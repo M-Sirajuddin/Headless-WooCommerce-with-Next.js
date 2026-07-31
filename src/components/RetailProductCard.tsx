@@ -8,10 +8,13 @@ import ProductImage from "@/components/ProductImage";
 import type { Product } from "@/types/woocommerce";
 import QuickViewModal, { QuickViewProduct } from "@/components/ui/QuickViewModal";
 import { useCustomerPrice, formatCustomerMoney } from "@/context/CustomerPricing";
+import { useAppSelector } from "@/hooks/redux";
 
 export default function RetailProductCard({ product }: { product: Product }) {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
+  const token = useAppSelector((s) => s.auth.token);
   const cp = useCustomerPrice(product.databaseId);
+  const priceLoading = !!token && cp === undefined;
 
   const price = cp?.price != null ? formatCustomerMoney(cp.price, cp.currency) : product.price;
   const regularPrice =
@@ -75,13 +78,17 @@ export default function RetailProductCard({ product }: { product: Product }) {
         </h3>
       </Link>
 
-      <PriceDisplay
-        price={price}
-        regularPrice={regularPrice}
-        salePrice={salePrice}
-        className="mt-2 justify-center"
-        size="md"
-      />
+      {priceLoading ? (
+        <span className="mt-2 inline-block h-6 w-20 animate-pulse rounded bg-black/10" aria-label="Loading price" />
+      ) : (
+        <PriceDisplay
+          price={price}
+          regularPrice={regularPrice}
+          salePrice={salePrice}
+          className="mt-2 justify-center"
+          size="md"
+        />
+      )}
 
       <AddToCartButton
         product={product}
