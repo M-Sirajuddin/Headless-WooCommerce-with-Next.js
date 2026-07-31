@@ -11,8 +11,9 @@ export async function POST(req: NextRequest) {
     const rawBodyBuffer = Buffer.from(arrayBuffer);
 
     // Verify WooCommerce webhook signature if a secret is configured
-    const secret = process.env.WC_WEBHOOK_SECRET;
+    let secret = process.env.WC_WEBHOOK_SECRET;
     if (secret) {
+      secret = secret.replace(/^["']|["']$/g, '').trim();
       const signature = req.headers.get('x-wc-webhook-signature');
       const computedSignature = crypto
         .createHmac('sha256', secret)
@@ -20,7 +21,12 @@ export async function POST(req: NextRequest) {
         .digest('base64');
 
       if (signature !== computedSignature) {
-        return NextResponse.json({ error: 'Unauthorized signature' }, { status: 401 });
+        return NextResponse.json({ 
+          error: 'Unauthorized signature',
+          received: signature,
+          computed: computedSignature,
+          secretLength: secret.length
+        }, { status: 401 });
       }
     }
 
