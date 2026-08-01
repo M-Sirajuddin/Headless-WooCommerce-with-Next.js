@@ -1331,8 +1331,8 @@ function cwoo_map_store_product( $product ) {
         'is_on_backorder'   => $product->is_on_backorder(),
         'prices'            => [
             'price'                     => $to_minor( $product->get_price() ),
-            'regular_price'             => $to_minor( $product->get_regular_price() ),
-            'sale_price'                => $to_minor( $product->get_sale_price() ),
+            'regular_price'             => $to_minor( is_user_logged_in() ? $product->get_price() : $product->get_regular_price() ),
+            'sale_price'                => $to_minor( is_user_logged_in() ? '' : $product->get_sale_price() ),
             'currency_code'             => get_woocommerce_currency(),
             'currency_symbol'           => $symbol,
             'currency_minor_unit'       => $minor,
