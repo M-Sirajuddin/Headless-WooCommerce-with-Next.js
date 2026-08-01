@@ -204,8 +204,6 @@ export default async function ProductPage({ params }: PageProps) {
           <CustomerPriceDisplay
             productId={product.databaseId}
             price={product.price}
-            regularPrice={product.regularPrice}
-            salePrice={product.salePrice}
             size="xl"
           />
 

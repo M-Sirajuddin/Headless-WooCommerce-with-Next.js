@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import { siteConfig } from "@/lib/seo";
 import StoreProvider from "@/store/Provider";
 import { ServerStatusProvider } from "@/context/ServerStatus";
-import { CustomerPricingProvider } from "@/context/CustomerPricing";
 import ServerDownBanner from "@/components/ServerDownBanner";
 import SiteStructuredData from "@/components/SiteStructuredData";
 import Header from "@/components/Header";
@@ -97,7 +96,6 @@ export default function RootLayout({
         <NextTopLoader color="#d93b2e" showSpinner={false} />
         <StoreProvider>
           <ServerStatusProvider>
-            <CustomerPricingProvider>
             <ServerDownBanner />
             <div className="flex min-h-screen flex-col">
               <Suspense fallback={null}>
@@ -106,7 +104,6 @@ export default function RootLayout({
               <main id="main-content" className="flex-1">{children}</main>
               <Footer />
             </div>
-            </CustomerPricingProvider>
           </ServerStatusProvider>
         </StoreProvider>
       </body>

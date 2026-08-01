@@ -8,26 +8,6 @@ import { formatStorePrice } from "@/lib/store-api";
 import QuickViewModal, { QuickViewProduct } from "@/components/ui/QuickViewModal";
 import AddToCartButton from "@/components/ui/AddToCartButton";
 import type { Product } from "@/types/woocommerce";
-import { useCustomerPrice, formatCustomerMoney } from "@/context/CustomerPricing";
-import { useAppSelector } from "@/hooks/redux";
-
-function getFormattedRegularPrice(product: StoreApiProduct): string | null {
-  const { regular_price, currency_code, currency_minor_unit } = product.prices;
-  const numericValue = Number(regular_price) / 10 ** currency_minor_unit;
-
-  if (!Number.isFinite(numericValue) || numericValue <= 0) {
-    return null;
-  }
-
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency_code || "USD",
-    }).format(numericValue);
-  } catch {
-    return null;
-  }
-}
 
 export default function StoreProductCard({
   product,
@@ -35,27 +15,19 @@ export default function StoreProductCard({
   product: StoreApiProduct;
 }) {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
-  const token = useAppSelector((s) => s.auth.token);
-  const cp = useCustomerPrice(product.id);
-  const priceLoading = !!token && cp === undefined;
-  const basePrice = useMemo(() => formatStorePrice(product), [product]);
-  const baseRegularPrice = useMemo(() => getFormattedRegularPrice(product), [product]);
-  const price = cp?.price != null ? formatCustomerMoney(cp.price, cp.currency) : basePrice;
-  const regularPrice =
-    cp?.regularPrice != null ? formatCustomerMoney(cp.regularPrice, cp.currency) : baseRegularPrice;
-  const showSale = Boolean(regularPrice && regularPrice !== price);
+  const price = useMemo(() => formatStorePrice(product), [product]);
 
   const mappedProductForQuickView = useMemo<QuickViewProduct>(() => ({
     id: String(product.id),
     name: product.name,
     price: price,
-    regularPrice: regularPrice,
+    regularPrice: null,
     description: product.description || product.short_description,
     imageUrl: product.images[0]?.src,
     slug: product.slug,
     inStock: product.is_in_stock,
     category: product.categories[0]?.name,
-  }), [product, price, regularPrice]);
+  }), [product, price]);
 
   const mappedProductForButton = useMemo<Product>(() => ({
     id: String(product.id),
@@ -65,7 +37,7 @@ export default function StoreProductCard({
     shortDescription: product.short_description || "",
     description: product.description || "",
     price: price,
-    regularPrice: regularPrice,
+    regularPrice: null,
     salePrice: null,
     stockStatus: product.is_in_stock ? "IN_STOCK" : "OUT_OF_STOCK",
     averageRating: 0,
@@ -77,7 +49,7 @@ export default function StoreProductCard({
       altText: product.images[0].alt || "",
     } : null,
     galleryImages: [],
-  }), [product, price, regularPrice]);
+  }), [product, price]);
 
   return (
     <article className="flex flex-col">
@@ -138,14 +110,7 @@ export default function StoreProductCard({
       </div>
 
       <div className="mt-3 flex items-center gap-2">
-        {priceLoading ? (
-          <span className="inline-block h-6 w-20 animate-pulse rounded bg-black/10" aria-label="Loading price" />
-        ) : (
         <span className="text-lg font-black text-black">{price}</span>
-        )}
-        {!priceLoading && showSale ? (
-          <span className="text-sm text-black/40 line-through">{regularPrice}</span>
-        ) : null}
       </div>
 
       <AddToCartButton
