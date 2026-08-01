@@ -24,6 +24,18 @@ function cwoo_maintenance_block() {
         exit;
     }
 }
+// ── ENSURE CUSTOMER PRICING ENVIRONMENT FOR REST REQUESTS ─────
+add_filter( 'woocommerce_product_get_price', 'cwoo_ensure_customer_pricing_env', 1, 2 );
+add_filter( 'woocommerce_product_get_regular_price', 'cwoo_ensure_customer_pricing_env', 1, 2 );
+add_filter( 'woocommerce_product_get_sale_price', 'cwoo_ensure_customer_pricing_env', 1, 2 );
+function cwoo_ensure_customer_pricing_env( $price, $product ) {
+    if ( is_user_logged_in() && function_exists( 'WC' ) ) {
+        if ( null === WC()->customer || WC()->customer->get_id() !== get_current_user_id() ) {
+            WC()->customer = new WC_Customer( get_current_user_id(), true );
+        }
+    }
+    return $price;
+}
 // ─────────────────────────────────────────────────────────────
 
 
