@@ -47,7 +47,7 @@ export default function PriceDisplay({
         onSale ? "text-red-500" : "text-foreground"
       )}
     >
-      {onSale ? salePrice : price}
+      {price}
     </span>
   );
 

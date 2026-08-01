@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { addItem } from "@/store/cartSlice";
 import { useServerStatus } from "@/context/ServerStatus";
+import { useCustomerPrice, formatCustomerMoney } from "@/context/CustomerPricing";
 import type { Product } from "@/types/woocommerce";
 import { cn } from "@/lib/utils";
 
@@ -29,11 +30,23 @@ export default function AddToCartButton({
 }: AddToCartButtonProps) {
   const dispatch = useAppDispatch();
   const { serverDown } = useServerStatus();
+  const token = useAppSelector((s) => s.auth.token);
+  const customerPrice = useCustomerPrice(product.databaseId);
   const [state, setState] = useState<"idle" | "loading" | "success">("idle");
   const isOutOfStock = product.stockStatus === "OUT_OF_STOCK";
 
+  // For logged-in users, the real (role/group) price is fetched async. Block
+  // adding until it resolves so the cart never captures the default price.
+  const priceLoading = !!token && customerPrice === undefined;
+
+  // Use the customer-specific price (if resolved) so the cart reflects it.
+  const effectivePrice =
+    customerPrice?.price != null
+      ? formatCustomerMoney(customerPrice.price, customerPrice.currency)
+      : product.price;
+
   const handleAdd = () => {
-    if (isOutOfStock) return;
+    if (isOutOfStock || priceLoading) return;
     setState("loading");
     // Simulate brief processing for premium feel
     window.setTimeout(() => {
@@ -42,7 +55,7 @@ export default function AddToCartButton({
           id: String(product.databaseId),
           slug: product.slug,
           name: product.name,
-          price: product.price,
+          price: effectivePrice,
           imageUrl: product.image?.thumbnailUrl ?? product.image?.sourceUrl ?? "",
           quantity,
         })
@@ -56,16 +69,18 @@ export default function AddToCartButton({
     ? "Unavailable"
     : isOutOfStock
       ? "Out of Stock"
-      : state === "success"
-        ? "Added to Cart"
-        : "Add to Cart";
+      : priceLoading
+        ? "Loading price…"
+        : state === "success"
+          ? "Added to Cart"
+          : "Add to Cart";
 
   return (
     <Button
       type="button"
       size={size}
       onClick={handleAdd}
-      disabled={isOutOfStock || serverDown}
+      disabled={isOutOfStock || serverDown || priceLoading}
       className={cn(
         "relative overflow-hidden transition-all",
         fullWidth && "w-full",

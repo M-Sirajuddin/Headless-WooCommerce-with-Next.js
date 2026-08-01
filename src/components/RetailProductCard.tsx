@@ -7,20 +7,32 @@ import PriceDisplay from "@/components/ui/PriceDisplay";
 import ProductImage from "@/components/ProductImage";
 import type { Product } from "@/types/woocommerce";
 import QuickViewModal, { QuickViewProduct } from "@/components/ui/QuickViewModal";
+import { useCustomerPrice, formatCustomerMoney } from "@/context/CustomerPricing";
+import { useAppSelector } from "@/hooks/redux";
+
 export default function RetailProductCard({ product }: { product: Product }) {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
+  const token = useAppSelector((s) => s.auth.token);
+  const cp = useCustomerPrice(product.databaseId);
+  const priceLoading = !!token && cp === undefined;
+
+  const price = cp?.price != null ? formatCustomerMoney(cp.price, cp.currency) : product.price;
+  const regularPrice =
+    cp?.regularPrice != null ? formatCustomerMoney(cp.regularPrice, cp.currency) : product.regularPrice;
+  const salePrice =
+    cp?.salePrice != null ? formatCustomerMoney(cp.salePrice, cp.currency) : product.salePrice;
 
   const mappedProductForQuickView = useMemo<QuickViewProduct>(() => ({
     id: product.id,
     name: product.name,
-    price: product.price,
-    regularPrice: product.regularPrice,
+    price: price,
+    regularPrice: regularPrice,
     description: product.description || product.shortDescription || "",
     imageUrl: product.image?.sourceUrl ?? undefined,
     slug: product.slug,
     inStock: product.stockStatus === "IN_STOCK",
     category: product.image?.altText || "Product",
-  }), [product]);
+  }), [product, price, regularPrice]);
 
   return (
     <article className="flex flex-col items-center bg-transparent text-center w-full">
@@ -66,13 +78,17 @@ export default function RetailProductCard({ product }: { product: Product }) {
         </h3>
       </Link>
 
-      <PriceDisplay
-        price={product.price}
-        regularPrice={product.regularPrice}
-        salePrice={product.salePrice}
-        className="mt-2 justify-center"
-        size="md"
-      />
+      {priceLoading ? (
+        <span className="mt-2 inline-block h-6 w-20 animate-pulse rounded bg-black/10" aria-label="Loading price" />
+      ) : (
+        <PriceDisplay
+          price={price}
+          regularPrice={regularPrice}
+          salePrice={salePrice}
+          className="mt-2 justify-center"
+          size="md"
+        />
+      )}
 
       <AddToCartButton
         product={product}
