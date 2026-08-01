@@ -61,10 +61,6 @@ export function mapProduct(p: any): Product {
     shortDescription: p.short_description || null,
     description: p.description || null,
     price: formatPrice(p.prices?.price),
-    regularPrice: p.prices?.regular_price ? formatPrice(p.prices.regular_price) : null,
-    salePrice: p.prices?.sale_price && p.prices.sale_price !== p.prices.regular_price
-      ? formatPrice(p.prices.sale_price)
-      : null,
     stockStatus: p.is_in_stock ? 'IN_STOCK' : p.is_on_backorder ? 'ON_BACKORDER' : 'OUT_OF_STOCK',
     averageRating: parseFloat(p.average_rating) || 0,
     reviewCount: p.review_count || 0,

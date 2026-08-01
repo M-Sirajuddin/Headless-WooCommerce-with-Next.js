@@ -31,7 +31,7 @@ export default function ProductCard({
   const dispatch = useAppDispatch();
   const [quickViewOpen, setQuickViewOpen] = useState(false);
 
-  const onSale = Boolean(product.salePrice && product.salePrice.length > 0);
+
 
   const quickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -86,13 +86,7 @@ export default function ProductCard({
         >
           {isOutOfStock && <OutOfStockBadge />}
 
-          {onSale && (
-            <div className="absolute top-3 right-3 z-10">
-              <div className="inline-flex items-center gap-1 rounded-full bg-gradient-brand px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-md">
-                Sale
-              </div>
-            </div>
-          )}
+
 
           <ProductImage
             src={product.image?.sourceUrl ?? null}
