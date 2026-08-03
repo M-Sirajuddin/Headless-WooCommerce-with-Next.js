@@ -114,15 +114,6 @@ function cwoo_register_routes() {
         'permission_callback' => '__return_true',
     ] );
 
-    // Customer-specific prices for a batch of product IDs (auth required).
-    // Runs WooCommerce price filters (incl. WisdmLabs Customer Specific
-    // Pricing) as the authenticated customer.
-    register_rest_route( $ns, '/prices', [
-        'methods'             => 'POST',
-        'callback'            => 'cwoo_customer_prices',
-        'permission_callback' => 'cwoo_auth_required',
-    ] );
-
     // Customer profile (GET = fetch, PUT = update name/email/displayName)
     register_rest_route( $ns, '/customer', [
         [
@@ -695,77 +686,6 @@ function cwoo_checkout( WP_REST_Request $req ) {
         'needsPayment' => (bool) $needs_payment,
         'paymentUrl'   => $payment_url,
     ] );
-}
-
-// ── CUSTOMER-SPECIFIC PRICES ─────────────────────────────────
-// For each requested product ID, returns the price that WooCommerce
-// (with all active pricing plugins, e.g. WisdmLabs Customer Specific
-// Pricing) resolves for the *currently authenticated* customer.
-function cwoo_customer_prices( WP_REST_Request $req ) {
-    if ( $err = cwoo_maybe_down() ) return $err;
-
-    $ids = $req->get_param( 'ids' );
-    if ( ! is_array( $ids ) ) {
-        return new WP_Error( 'missing_data', 'ids (array) is required.', [ 'status' => 400 ] );
-    }
-
-    $uid = get_current_user_id();
-    $transient_key = 'cwoo_prices_user_' . $uid;
-    $cached = get_transient( $transient_key );
-    if ( ! is_array( $cached ) ) {
-        $cached = [];
-    }
-
-    // Ensure WooCommerce has a customer object bound to the authed user so
-    // role/group/customer pricing rules resolve correctly.
-    if ( function_exists( 'WC' ) && null === WC()->customer ) {
-        WC()->customer = new WC_Customer( $uid, true );
-    }
-
-    $currency = get_woocommerce_currency();
-    $out = [];
-    $needs_save = false;
-
-    foreach ( $ids as $raw_id ) {
-        $pid = absint( $raw_id );
-        if ( ! $pid ) continue;
-
-        if ( isset( $cached[ $pid ] ) ) {
-            $out[ (string) $pid ] = $cached[ $pid ];
-            continue;
-        }
-
-        $product = wc_get_product( $pid );
-        if ( ! $product ) continue;
-
-        // get_price()/get_regular_price()/get_sale_price() pass through all
-        // registered price filters for the current user.
-        $price   = $product->get_price();
-        $regular = $product->get_regular_price();
-        $sale    = $product->get_sale_price();
-
-        // If the resolved customer price is lower than regular price, and there's no native sale
-        if ( (float) $price < (float) $regular && ! $sale ) {
-            $sale = $price;
-        }
-
-        $item = [
-            'price'        => is_numeric( $price )   ? (float) $price   : null,
-            'regularPrice' => is_numeric( $regular ) ? (float) $regular : null,
-            'salePrice'    => is_numeric( $sale )    ? (float) $sale    : null,
-            'currency'     => $currency,
-        ];
-
-        $out[ (string) $pid ] = $item;
-        $cached[ $pid ] = $item;
-        $needs_save = true;
-    }
-
-    if ( $needs_save ) {
-        set_transient( $transient_key, $cached, 12 * HOUR_IN_SECONDS );
-    }
-
-    return rest_ensure_response( $out );
 }
 
 
