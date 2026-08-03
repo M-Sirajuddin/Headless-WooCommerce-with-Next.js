@@ -64,7 +64,6 @@ function LoginContent() {
     try {
       const result = await loginUser(formData.username, formData.password);
       localStorage.setItem("woo_auth_token", result.token);
-      document.cookie = `woo_auth_token=${result.token}; path=/; max-age=604800; SameSite=Lax; Secure`;
       // Fetch full WooCommerce profile (firstName, lastName, billing, shipping)
       let fullUser = result.user;
       try {

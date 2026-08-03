@@ -82,7 +82,6 @@ export default function StoreProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {
         localStorage.removeItem('woo_auth_token');
-        document.cookie = "woo_auth_token=; path=/; max-age=0";
       })
       .finally(() => {
         store.dispatch(setHydrated());
