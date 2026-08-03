@@ -80,8 +80,8 @@ function storeProductToProduct(p: StoreApiProduct): import('@/types/woocommerce'
     shortDescription: p.short_description || null,
     description: p.description || null,
     price: formatStorePrice(p),
-    regularPrice: null,
-    salePrice: null,
+    regularPrice: p.prices?.regular_price ? new Intl.NumberFormat("en-US", { style: "currency", currency: p.prices.currency_code || "USD" }).format(Number(p.prices.regular_price) / 10 ** p.prices.currency_minor_unit) : null,
+    salePrice: p.prices?.sale_price && p.prices.sale_price !== p.prices.regular_price ? new Intl.NumberFormat("en-US", { style: "currency", currency: p.prices.currency_code || "USD" }).format(Number(p.prices.sale_price) / 10 ** p.prices.currency_minor_unit) : null,
     stockStatus: p.is_in_stock ? 'IN_STOCK' : p.is_on_backorder ? 'ON_BACKORDER' : 'OUT_OF_STOCK',
     averageRating: parseFloat(p.average_rating) || 0,
     reviewCount: p.review_count || 0,
@@ -204,6 +204,8 @@ export default async function ProductPage({ params }: PageProps) {
           <CustomerPriceDisplay
             productId={product.databaseId}
             price={product.price}
+            regularPrice={product.regularPrice}
+            salePrice={product.salePrice}
             size="xl"
           />
 

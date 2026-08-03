@@ -25,31 +25,6 @@ function cwoo_maintenance_block() {
     }
 }
 
-// ── ENSURE SESSION AND CUSTOMER ENV FOR REST REQUESTS ─────────
-add_action( 'woocommerce_init', 'cwoo_init_rest_session_customer', 5 );
-function cwoo_init_rest_session_customer() {
-    if ( defined( 'REST_REQUEST' ) && REST_REQUEST && function_exists( 'WC' ) ) {
-        if ( null === WC()->session ) {
-            if ( ! class_exists( 'WC_Session_Handler' ) ) {
-                include_once WC_ABSPATH . 'includes/class-wc-session-handler.php';
-            }
-            WC()->session = new WC_Session_Handler();
-            WC()->session->init();
-        }
-        if ( is_user_logged_in() ) {
-            $uid = get_current_user_id();
-            if ( null === WC()->customer || WC()->customer->get_id() !== $uid ) {
-                WC()->customer = new WC_Customer( $uid, true );
-            }
-        } else if ( defined( 'CWOO_WHOLESALE_USER_ID' ) && CWOO_WHOLESALE_USER_ID ) {
-            wp_set_current_user( (int) CWOO_WHOLESALE_USER_ID );
-            if ( null === WC()->customer || WC()->customer->get_id() !== (int) CWOO_WHOLESALE_USER_ID ) {
-                WC()->customer = new WC_Customer( (int) CWOO_WHOLESALE_USER_ID, true );
-            }
-        }
-    }
-}
-// ─────────────────────────────────────────────────────────────
 
 // ── CORS ─────────────────────────────────────────────────────
 add_action( 'init', 'cwoo_cors_headers' );
@@ -1343,8 +1318,8 @@ function cwoo_map_store_product( $product ) {
         'is_on_backorder'   => $product->is_on_backorder(),
         'prices'            => [
             'price'                     => $to_minor( $product->get_price() ),
-            'regular_price'             => $to_minor( is_user_logged_in() ? $product->get_price() : $product->get_regular_price() ),
-            'sale_price'                => $to_minor( is_user_logged_in() ? '' : $product->get_sale_price() ),
+            'regular_price'             => $to_minor( $product->get_regular_price() ),
+            'sale_price'                => $to_minor( $product->get_sale_price() ),
             'currency_code'             => get_woocommerce_currency(),
             'currency_symbol'           => $symbol,
             'currency_minor_unit'       => $minor,

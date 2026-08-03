@@ -19,6 +19,8 @@ export interface Product {
   shortDescription: string | null;
   description: string | null;
   price: string; // Formatted price string e.g. "$29.99"
+  regularPrice: string | null;
+  salePrice: string | null;
   stockStatus: 'IN_STOCK' | 'OUT_OF_STOCK' | 'ON_BACKORDER';
   averageRating: number; // 0.0 – 5.0
   reviewCount: number;

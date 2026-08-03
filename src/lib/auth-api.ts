@@ -310,6 +310,8 @@ export async function submitMultiQuoteRequest(
 // ── CUSTOMER-SPECIFIC PRICES ─────────────────────────────────
 export interface CustomerPrice {
   price: number | null;
+  regularPrice: number | null;
+  salePrice: number | null;
   currency: string;
 }
 

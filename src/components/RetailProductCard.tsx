@@ -14,7 +14,7 @@ export default function RetailProductCard({ product }: { product: Product }) {
     id: product.id,
     name: product.name,
     price: product.price,
-    regularPrice: null,
+    regularPrice: product.regularPrice,
     description: product.description || product.shortDescription || "",
     imageUrl: product.image?.sourceUrl ?? undefined,
     slug: product.slug,
@@ -68,6 +68,8 @@ export default function RetailProductCard({ product }: { product: Product }) {
 
       <PriceDisplay
         price={product.price}
+        regularPrice={product.regularPrice}
+        salePrice={product.salePrice}
         className="mt-2 justify-center"
         size="md"
       />

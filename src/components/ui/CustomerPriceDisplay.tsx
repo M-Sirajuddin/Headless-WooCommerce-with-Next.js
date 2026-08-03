@@ -16,12 +16,16 @@ interface Props {
  */
 export default function CustomerPriceDisplay({
   price,
+  regularPrice,
+  salePrice,
   className,
   size,
 }: Props) {
   return (
     <PriceDisplay
       price={price}
+      regularPrice={regularPrice}
+      salePrice={salePrice}
       className={className}
       size={size}
     />

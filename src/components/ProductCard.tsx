@@ -31,7 +31,11 @@ export default function ProductCard({
   const dispatch = useAppDispatch();
   const [quickViewOpen, setQuickViewOpen] = useState(false);
 
-
+  const onSale =
+    product.salePrice &&
+    product.regularPrice &&
+    product.salePrice !== product.regularPrice &&
+    product.salePrice.length > 0;
 
   const quickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -53,7 +57,7 @@ export default function ProductCard({
     id: product.id,
     name: product.name,
     price: product.price,
-    regularPrice: null,
+    regularPrice: product.regularPrice,
     description: product.description || product.shortDescription || "",
     imageUrl: product.image?.sourceUrl ?? undefined,
     slug: product.slug,
@@ -86,7 +90,13 @@ export default function ProductCard({
         >
           {isOutOfStock && <OutOfStockBadge />}
 
-
+          {onSale && (
+            <div className="absolute top-3 right-3 z-10">
+              <div className="inline-flex items-center gap-1 rounded-full bg-gradient-brand px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-md">
+                Sale
+              </div>
+            </div>
+          )}
 
           <ProductImage
             src={product.image?.sourceUrl ?? null}
@@ -162,6 +172,8 @@ export default function ProductCard({
         <div className="mt-auto flex items-end justify-between pt-2">
           <PriceDisplay
             price={product.price}
+            regularPrice={product.regularPrice}
+            salePrice={product.salePrice}
           />
           <button
             type="button"

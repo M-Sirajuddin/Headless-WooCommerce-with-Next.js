@@ -9,6 +9,24 @@ import QuickViewModal, { QuickViewProduct } from "@/components/ui/QuickViewModal
 import AddToCartButton from "@/components/ui/AddToCartButton";
 import type { Product } from "@/types/woocommerce";
 
+function getFormattedRegularPrice(product: StoreApiProduct): string | null {
+  const { regular_price, currency_code, currency_minor_unit } = product.prices;
+  const numericValue = Number(regular_price) / 10 ** currency_minor_unit;
+
+  if (!Number.isFinite(numericValue) || numericValue <= 0) {
+    return null;
+  }
+
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency_code || "USD",
+    }).format(numericValue);
+  } catch {
+    return null;
+  }
+}
+
 export default function StoreProductCard({
   product,
 }: {
@@ -16,18 +34,20 @@ export default function StoreProductCard({
 }) {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const price = useMemo(() => formatStorePrice(product), [product]);
+  const regularPrice = useMemo(() => getFormattedRegularPrice(product), [product]);
+  const showSale = Boolean(regularPrice && regularPrice !== price);
 
   const mappedProductForQuickView = useMemo<QuickViewProduct>(() => ({
     id: String(product.id),
     name: product.name,
     price: price,
-    regularPrice: null,
+    regularPrice: regularPrice,
     description: product.description || product.short_description,
     imageUrl: product.images[0]?.src,
     slug: product.slug,
     inStock: product.is_in_stock,
     category: product.categories[0]?.name,
-  }), [product, price]);
+  }), [product, price, regularPrice]);
 
   const mappedProductForButton = useMemo<Product>(() => ({
     id: String(product.id),
@@ -37,7 +57,7 @@ export default function StoreProductCard({
     shortDescription: product.short_description || "",
     description: product.description || "",
     price: price,
-    regularPrice: null,
+    regularPrice: regularPrice,
     salePrice: null,
     stockStatus: product.is_in_stock ? "IN_STOCK" : "OUT_OF_STOCK",
     averageRating: 0,
@@ -49,7 +69,7 @@ export default function StoreProductCard({
       altText: product.images[0].alt || "",
     } : null,
     galleryImages: [],
-  }), [product, price]);
+  }), [product, price, regularPrice]);
 
   return (
     <article className="flex flex-col">
@@ -111,6 +131,9 @@ export default function StoreProductCard({
 
       <div className="mt-3 flex items-center gap-2">
         <span className="text-lg font-black text-black">{price}</span>
+        {showSale ? (
+          <span className="text-sm text-black/40 line-through">{regularPrice}</span>
+        ) : null}
       </div>
 
       <AddToCartButton

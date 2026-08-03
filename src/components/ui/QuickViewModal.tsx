@@ -47,7 +47,11 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
     setTimeout(() => setAdded(false), 2000);
   };
 
-  const showSale = false;
+  const showSale = Boolean(
+    product.regularPrice &&
+    product.regularPrice !== product.price &&
+    product.regularPrice.length > 0
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -103,6 +107,11 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
             {/* Price */}
             <div className="mt-4 flex items-baseline gap-3">
               <span className="text-xl font-black text-black">{product.price}</span>
+              {showSale && (
+                <span className="text-sm text-black/40 line-through">
+                  {product.regularPrice}
+                </span>
+              )}
             </div>
 
             {/* Description */}
