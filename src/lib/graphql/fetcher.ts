@@ -1,63 +1,6 @@
-/**
- * Product fetching via WooCommerce Store API.
- * No GraphQL / WPGraphQL plugin required.
- */
 import 'server-only';
-import { ISR_REVALIDATE_SECONDS, REST_URL } from '@/lib/env';
 import type { ProductConnection, Product } from '@/types/woocommerce';
-import { deepDecodeHtmlEntities } from '@/lib/utils';
-import { readCache, writeCache } from '@/lib/api-cache';
-
-const STORE_API = `${REST_URL.replace(/\/$/, '')}/wc/store/v1`;
-const FETCH_TIMEOUT_MS = 15000;
-
-function fetchWithTimeout(url: string, options: RequestInit & { next?: any } = {}): Promise<Response> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
-  // Try to retrieve JWT Bearer token dynamically
-  let token: string | undefined;
-  if (typeof window === "undefined") {
-    try {
-      const { cookies } = require("next/headers");
-      token = cookies().get("woo_auth_token")?.value;
-    } catch {
-      // Cookies context might not be available during static generation
-    }
-  } else {
-    token = localStorage.getItem("woo_auth_token") || undefined;
-  }
-
-  const headers = new Headers(options.headers);
-  let nextOpts = options.next ? { ...options.next } : {};
-
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-
-  return fetch(url, {
-    ...options,
-    headers,
-    next: nextOpts,
-    signal: controller.signal,
-  }).finally(() => clearTimeout(timer));
-}
-
-async function storeApiFetch<T>(
-  path: string,
-  params: Record<string, string | number> = {}
-): Promise<{ data: T; headers: Headers }> {
-  const url = new URL(`${STORE_API}/${path.replace(/^\//, '')}`);
-  Object.entries(params).forEach(([k, v]) => {
-    if (v !== undefined && v !== '') url.searchParams.set(k, String(v));
-  });
-  const res = await fetchWithTimeout(url.toString(), {
-    next: { revalidate: ISR_REVALIDATE_SECONDS },
-  });
-  if (!res.ok) throw new Error(`Store API ${path} failed: ${res.status}`);
-  const data = await res.json();
-  return { data: deepDecodeHtmlEntities(data), headers: res.headers };
-}
+import dummyData from '../dummy-data.json';
 
 // Map Store API product shape → shared Product type
 export function mapProduct(p: any): Product {
@@ -119,55 +62,18 @@ export async function getProducts(
   first = 24,
   after?: string
 ): Promise<ProductConnection> {
-  let page = 1;
-  if (after) {
-    try {
-      const decoded = atob(after);
-      const match = decoded.match(/page:(\d+)/);
-      if (match) page = parseInt(match[1], 10);
-    } catch {}
-  }
-
-  const cacheKey = `gql_products_p${page}_pp${first}`;
-  const cached = readCache<ProductConnection>(cacheKey);
-  if (cached) return cached;
-
-  try {
-    const { data, headers } = await storeApiFetch<any[]>('products', {
-      per_page: first,
-      page,
-      status: 'publish',
-    });
-
-    const totalPages = Number(headers.get('X-WP-TotalPages') ?? 1);
-    const hasNextPage = page < totalPages;
-    const nextCursor = hasNextPage ? btoa(`page:${page + 1}`) : null;
-    const result: ProductConnection = {
-      edges: data.map((p: any) => ({ cursor: btoa(`id:${p.id}`), node: mapProduct(p) })),
-      pageInfo: { hasNextPage, endCursor: nextCursor },
-    };
-    writeCache(cacheKey, result);
-    return result;
-  } catch (err) {
-    throw err;
-  }
+  const allMapped = dummyData.products.map(mapProduct);
+  return {
+    edges: allMapped.map((p) => ({ cursor: btoa(`id:${p.id}`), node: p })),
+    pageInfo: { hasNextPage: false, endCursor: null },
+  };
 }
 
 export async function getProduct(slug: string): Promise<Product | null> {
-  const cacheKey = `gql_product_${slug}`;
-  const cached = readCache<Product>(cacheKey);
-  if (cached) return cached;
-  try {
-    const { data } = await storeApiFetch<any[]>('products', { slug });
-    const product = data && data.length > 0 ? mapProduct(data[0]) : null;
-    if (product) writeCache(cacheKey, product);
-    return product;
-  } catch (err) {
-    throw err;
-  }
+  const p = dummyData.products.find((prod) => prod.slug === slug);
+  return p ? mapProduct(p) : null;
 }
 
-// Re-export for any files that imported gqlFetch (they should be migrated, but keep compat)
 export async function gqlFetch<T>(_query: string, _variables?: Record<string, unknown>): Promise<T> {
   throw new Error('gqlFetch: GraphQL has been removed. Use Store API or custom REST endpoints.');
 }

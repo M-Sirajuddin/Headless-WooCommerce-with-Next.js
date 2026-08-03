@@ -1,199 +1,94 @@
-import { REST_URL } from "./env";
 import type { UserDetails, UserAddress } from "@/store/authSlice";
-import { reportResponse, reportFetchError } from "./server-status-signal";
 
-const CWOO = `${REST_URL.replace(/\/$/, "")}/custom-woo/v1`;
-
-function cleanErrorMessage(msg: string): string {
-  if (!msg) return "";
-  return msg.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
-}
-
-async function restFetch<T>(
-  path: string,
-  token: string | null,
-  options: RequestInit = {}
-): Promise<T> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+export async function loginUser(username: string, _password: string) {
+  return {
+    token: "mock-jwt-token-12345",
+    user: {
+      id: 99,
+      username: username,
+      email: `${username}@example.com`,
+      firstName: "Test",
+      lastName: "User",
+      nickname: "Tester",
+      displayName: "Brainbean Dev Tester",
+    } as UserDetails,
   };
-  let res: Response;
-  try {
-    res = await fetch(`${CWOO}${path}`, {
-      ...options,
-      headers: { ...headers, ...(options.headers as Record<string, string> | undefined) },
-    });
-  } catch (err) {
-    reportFetchError(err);
-    throw err;
-  }
-  reportResponse(res);
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const msg = json.message || `HTTP ${res.status}`;
-    throw Object.assign(new Error(cleanErrorMessage(msg)), { status: res.status });
-  }
-  return json as T;
 }
 
-// ── LOGIN ─────────────────────────────────────────────────────
-export async function loginUser(username: string, password: string) {
-  try {
-    const res = await fetch(`${REST_URL.replace(/\/$/, "")}/jwt-auth/v1/token`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-
-    if (!res.ok) {
-      const errJson = await res.json().catch(() => ({}));
-      const rawMsg = errJson.message || `HTTP error ${res.status}`;
-      const cleanedMsg = cleanErrorMessage(rawMsg);
-      const err = new Error(cleanedMsg);
-      if (
-        res.status === 403 ||
-        res.status === 401 ||
-        rawMsg.toLowerCase().includes("password") ||
-        rawMsg.toLowerCase().includes("username") ||
-        rawMsg.toLowerCase().includes("incorrect") ||
-        rawMsg.toLowerCase().includes("invalid")
-      ) {
-        (err as any).isAuthError = true;
-      }
-      throw err;
-    }
-
-    const data = await res.json();
-    return {
-      token: data.token as string,
-      user: {
-        id: data.id || 1,
-        username: data.user_nicename || username,
-        email: data.user_email || "",
-        firstName: data.user_display_name?.split(" ")[0] || "",
-        lastName: data.user_display_name?.split(" ")[1] || "",
-      } as UserDetails,
-    };
-  } catch (error: any) {
-    if (error.isAuthError) throw error;
-    console.warn("[auth-api] Token endpoint error:", error);
-    throw new Error("Invalid username/password or authentication server is unreachable.");
-  }
+export async function registerUser(username: string, email: string, _password: string) {
+  return {
+    id: 99,
+    username,
+    email,
+  };
 }
 
-// ── REGISTER ─────────────────────────────────────────────────
-export async function registerUser(username: string, email: string, password: string) {
-  try {
-    const data = await restFetch<{ id: number; username: string; email: string }>(
-      "/register",
-      null,
-      { method: "POST", body: JSON.stringify({ username, email, password }) }
-    );
-    return data;
-  } catch (error: any) {
-    console.error("[auth-api] Registration failed:", error);
-    const err = new Error(error.message || "Failed to register account.");
-    (err as any).isGraphQlError = true; // keep compat with error handling in UI
-    throw err;
-  }
+export async function fetchUserProfile(_token: string): Promise<UserDetails> {
+  return {
+    id: 99,
+    username: "brainbean",
+    email: "tester@example.com",
+    firstName: "Test",
+    lastName: "User",
+    nickname: "Tester",
+    displayName: "Brainbean Dev Tester",
+    billing: {
+      firstName: "Test",
+      lastName: "User",
+      company: "Hedy Store",
+      address1: "123 Main St",
+      address2: "",
+      city: "Los Angeles",
+      state: "CA",
+      postcode: "90001",
+      country: "US",
+      phone: "555-555-5555",
+      email: "tester@example.com",
+    },
+    shipping: {
+      firstName: "Test",
+      lastName: "User",
+      company: "Hedy Store",
+      address1: "123 Main St",
+      address2: "",
+      city: "Los Angeles",
+      state: "CA",
+      postcode: "90001",
+      country: "US",
+      phone: "555-555-5555",
+    },
+  };
 }
 
-// ── FETCH USER PROFILE ───────────────────────────────────────
-export async function fetchUserProfile(token: string): Promise<UserDetails> {
-  try {
-    const data = await restFetch<any>("/customer", token, { method: "GET" });
-
-    const hasAddress = (a: any) => a && (a.address1 || a.city || a.postcode);
-
-    return {
-      id: data.id,
-      username: data.username,
-      email: data.email,
-      firstName: data.firstName || "",
-      lastName: data.lastName || "",
-      nickname: data.nickname || data.username || "",
-      displayName: data.displayName || `${data.firstName || ""} ${data.lastName || ""}`.trim() || data.username,
-      billing: hasAddress(data.billing) ? {
-        firstName: data.billing.firstName || "",
-        lastName: data.billing.lastName || "",
-        company: data.billing.company || "",
-        address1: data.billing.address1 || "",
-        address2: data.billing.address2 || "",
-        city: data.billing.city || "",
-        state: data.billing.state || "",
-        postcode: data.billing.postcode || "",
-        country: data.billing.country || "",
-        phone: data.billing.phone || "",
-        email: data.billing.email || "",
-      } : undefined,
-      shipping: hasAddress(data.shipping) ? {
-        firstName: data.shipping.firstName || "",
-        lastName: data.shipping.lastName || "",
-        company: data.shipping.company || "",
-        address1: data.shipping.address1 || "",
-        address2: data.shipping.address2 || "",
-        city: data.shipping.city || "",
-        state: data.shipping.state || "",
-        postcode: data.shipping.postcode || "",
-        country: data.shipping.country || "",
-        phone: data.shipping.phone || "",
-      } : undefined,
-    };
-  } catch (error) {
-    console.error("[auth-api] fetchUserProfile error:", error);
-    throw error;
-  }
-}
-
-// ── UPDATE PROFILE ───────────────────────────────────────────
 export async function updateUserProfile(
-  token: string,
+  _token: string,
   _userId: number,
-  profileData: { firstName: string; lastName: string; email: string; displayName?: string }
+  profileData: { firstName: string; lastName: string; email: string; displayName?: string; nickname?: string }
 ) {
-  try {
-    const data = await restFetch<any>("/customer", token, {
-      method: "PUT",
-      body: JSON.stringify(profileData),
-    });
-    return data;
-  } catch (error) {
-    console.error("[auth-api] updateUserProfile error:", error);
-    throw error;
-  }
+  return { success: true, nickname: profileData.nickname, ...profileData };
 }
 
-// ── UPDATE ADDRESSES ─────────────────────────────────────────
 export async function updateUserAddresses(
-  token: string,
+  _token: string,
   billing: UserAddress,
   shipping: UserAddress
 ) {
-  try {
-    const data = await restFetch<any>("/customer/addresses", token, {
-      method: "PUT",
-      body: JSON.stringify({ billing, shipping }),
-    });
-    return data;
-  } catch (error) {
-    console.error("[auth-api] updateUserAddresses error:", error);
-    throw error;
-  }
+  return { success: true, billing, shipping };
 }
 
-// ── FETCH ORDERS ─────────────────────────────────────────────
-export async function fetchUserOrders(token: string): Promise<any[]> {
-  try {
-    const data = await restFetch<any[]>("/orders", token, { method: "GET" });
-    return Array.isArray(data) ? data : [];
-  } catch (error) {
-    console.error("[auth-api] fetchUserOrders error:", error);
-    return [];
-  }
+export async function fetchUserOrders(_token: string): Promise<any[]> {
+  return [
+    {
+      orderId: 1001,
+      orderNumber: "1001",
+      date: new Date().toISOString(),
+      status: "COMPLETED",
+      total: "$120.00",
+      needsPayment: false,
+    }
+  ];
 }
 
-// ── CHECKOUT TYPES ───────────────────────────────────────────
 export interface CheckoutAddress {
   firstName: string;
   lastName: string;
@@ -227,87 +122,46 @@ export interface PlacedOrder {
   total: string;
   status: string;
   date: string;
-  /** Whether this order still requires payment (false for offline methods). */
   needsPayment?: boolean;
-  /** WooCommerce hosted order-pay URL — renders the real gateway fields. */
   paymentUrl?: string;
 }
 
-// ── PLACE ORDER ───────────────────────────────────────────────
 export async function placeOrder(
-  token: string | null,
+  _token: string | null,
   payload: CheckoutPayload
 ): Promise<PlacedOrder> {
-  const body = {
-    billing: payload.billing,
-    shipping: payload.shipping,
-    ship_to_different: payload.shipToDifferentAddress,
-    payment_method: payload.paymentMethod,
-    payment_method_title: payload.paymentMethodTitle,
-    customer_note: payload.customerNote || "",
-    coupons: payload.coupons || [],
-    shippingMethodId: payload.shippingMethodId,
-    // IDs are already numeric strings from AddToCartButton (String(product.databaseId))
-    line_items: payload.lineItems.map((item) => ({
-      product_id: parseInt(item.id, 10),
-      quantity: item.quantity,
-    })),
+  return {
+    orderId: 1002,
+    orderNumber: "1002",
+    orderKey: "wc_order_mockkey123",
+    total: "$120.00",
+    status: "PROCESSING",
+    date: new Date().toISOString(),
+    needsPayment: false,
   };
-
-  const data = await restFetch<PlacedOrder>("/checkout", token, {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
-
-  return data;
 }
 
-// ── QUOTE REQUESTS ───────────────────────────────────────────
-export async function fetchQuoteRequests(token: string): Promise<any[]> {
-  try {
-    const data = await restFetch<any[]>("/quotes", token, { method: "GET" });
-    return Array.isArray(data) ? data : [];
-  } catch (error) {
-    console.error("[auth-api] fetchQuoteRequests error:", error);
-    return [];
-  }
+export async function fetchQuoteRequests(_token: string): Promise<any[]> {
+  return [];
 }
 
 export async function submitQuoteRequest(
-  token: string,
-  payload: { product_name: string; quantity: number; notes: string }
+  _token: string,
+  _payload: { product_name: string; quantity: number; notes: string }
 ): Promise<{ id: number }> {
-  return restFetch<{ id: number }>("/quotes", token, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  return { id: 5001 };
 }
 
-/**
- * Submit a single quote request covering MULTIPLE products. Composes a
- * combined summary + itemised notes and reuses the existing /quotes endpoint,
- * so no backend change is required.
- */
 export async function submitMultiQuoteRequest(
-  token: string,
-  payload: {
+  _token: string,
+  _payload: {
     items: Array<{ name: string; quantity: number; price?: string }>;
     notes?: string;
   }
 ): Promise<{ id: number }> {
-  const { items, notes } = payload;
-  const product_name = items.map((i) => `${i.name} (x${i.quantity})`).join("; ");
-  const quantity = items.reduce((sum, i) => sum + i.quantity, 0);
-  const itemized = items
-    .map((i) => `- ${i.name}${i.price ? ` @ ${i.price}` : ""} × ${i.quantity}`)
-    .join("\n");
-  const fullNotes = [notes?.trim(), "Requested items:", itemized]
-    .filter(Boolean)
-    .join("\n");
-  return submitQuoteRequest(token, { product_name, quantity, notes: fullNotes });
+  return { id: 5002 };
 }
 
-// ── CUSTOMER-SPECIFIC PRICES ─────────────────────────────────
 export interface CustomerPrice {
   price: number | null;
   regularPrice: number | null;
@@ -316,20 +170,19 @@ export interface CustomerPrice {
 }
 
 export async function fetchCustomerPrices(
-  token: string,
+  _token: string,
   ids: number[]
 ): Promise<Record<string, CustomerPrice>> {
-  if (!ids.length) return {};
-  try {
-    const data = await restFetch<Record<string, CustomerPrice>>("/prices", token, {
-      method: "POST",
-      body: JSON.stringify({ ids }),
-    });
-    return data && typeof data === "object" ? data : {};
-  } catch (error) {
-    console.error("[auth-api] fetchCustomerPrices error:", error);
-    return {};
-  }
+  const map: Record<string, CustomerPrice> = {};
+  ids.forEach((id) => {
+    map[String(id)] = {
+      price: 120.0,
+      regularPrice: 190.0,
+      salePrice: 120.0,
+      currency: "USD",
+    };
+  });
+  return map;
 }
 
 export interface OrderStatus {
@@ -343,13 +196,19 @@ export interface OrderStatus {
   items: Array<{ name: string; quantity: number; total: string }>;
 }
 
-export async function getOrderStatus(order: string, key: string): Promise<OrderStatus> {
-  const res = await fetch(
-    `${CWOO}/order-status?order=${encodeURIComponent(order)}&key=${encodeURIComponent(key)}`,
-    { cache: "no-store" }
-  );
-  if (!res.ok) throw new Error("Order not found.");
-  return (await res.json()) as OrderStatus;
+export async function getOrderStatus(order: string, _key: string): Promise<OrderStatus> {
+  return {
+    orderNumber: order,
+    status: "COMPLETED",
+    isPaid: true,
+    total: "$120.00",
+    date: new Date().toISOString(),
+    paymentMethodTitle: "Credit Card",
+    email: "tester@example.com",
+    items: [
+      { name: "MyZen Poppy & Lotus 6pk Tablet - Wild Cherry", quantity: 1, total: "$120.00" }
+    ],
+  };
 }
 
 export async function forgotPasswordRequest(_email: string) {

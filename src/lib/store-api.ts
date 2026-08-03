@@ -1,5 +1,4 @@
-import { ISR_REVALIDATE_SECONDS, REST_URL } from "@/lib/env";
-import { deepDecodeHtmlEntities } from "@/lib/utils";
+import dummyData from "./dummy-data.json";
 
 export interface StoreApiImage {
   id: number;
@@ -65,180 +64,80 @@ export interface StoreProductsResult {
   totalPages: number;
 }
 
-const STORE_API_BASE = `${REST_URL.replace(/\/$/, "")}/wc/store/v1`;
+export async function getStoreProducts(
+  q: StoreProductQuery = {}
+): Promise<StoreProductsResult> {
+  let list = [...dummyData.products] as StoreApiProduct[];
 
-const FETCH_TIMEOUT_MS = 15000;
-
-function fetchWithTimeout(url: string, options: RequestInit & { next?: any } = {}): Promise<Response> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
-  // Try to retrieve JWT Bearer token dynamically
-  let token: string | undefined;
-  if (typeof window === "undefined") {
-    try {
-      const { cookies } = require("next/headers");
-      token = cookies().get("woo_auth_token")?.value;
-    } catch {
-      // Cookies context might not be available during static generation
-    }
-  } else {
-    token = localStorage.getItem("woo_auth_token") || undefined;
+  if (q.search) {
+    list = list.filter((p) =>
+      p.name.toLowerCase().includes(q.search!.toLowerCase())
+    );
   }
 
-  const headers = new Headers(options.headers);
-  let nextOpts = options.next ? { ...options.next } : {};
-
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-
-  return fetch(url, {
-    ...options,
-    headers,
-    next: nextOpts,
-    signal: controller.signal,
-  }).finally(() => clearTimeout(timer));
-}
-
-async function fetchStore<T>(
-  path: string,
-  params?: Record<string, string | number | undefined>
-): Promise<{ data: T; headers: Headers }> {
-  const url = new URL(`${STORE_API_BASE}/${path.replace(/^\//, "")}`);
-
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== "") {
-        url.searchParams.set(key, String(value));
-      }
-    });
-  }
-
-  const response = await fetchWithTimeout(url.toString(), {
-    next: { revalidate: ISR_REVALIDATE_SECONDS },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Store API request failed: ${response.status} ${response.statusText}`);
-  }
-
-  const data = (await response.json()) as T;
-  return { data: deepDecodeHtmlEntities(data), headers: response.headers };
-}
-
-export async function getStoreProducts({
-  search,
-  page = 1,
-  perPage = 20,
-  category,
-  tag,
-  orderby = "date",
-  order = "desc",
-  minPrice,
-  maxPrice,
-}: StoreProductQuery = {}): Promise<StoreProductsResult> {
-  const { data, headers } = await fetchStore<StoreApiProduct[]>("products", {
-    search,
-    page,
-    per_page: perPage,
-    category,
-    tag,
-    orderby,
-    order,
-    min_price: minPrice,
-    max_price: maxPrice,
-  });
   return {
-    items: data,
-    total: Number(headers.get("X-WP-Total") ?? data.length),
-    totalPages: Number(headers.get("X-WP-TotalPages") ?? 1),
+    items: list,
+    total: list.length,
+    totalPages: 1,
   };
 }
 
-export async function getStoreCategories(
-  perPage = 20
-): Promise<StoreApiCategory[]> {
-  const { data } = await fetchStore<StoreApiCategory[]>("products/categories", {
-    per_page: perPage,
-    orderby: "count",
-    order: "desc",
-  });
-  return data.filter((category) => category.count > 0);
+export async function getStoreCategories(): Promise<StoreApiCategory[]> {
+  return dummyData.categories.map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    count: c.count,
+    image: null,
+    permalink: `/category/${c.slug}`,
+  }));
 }
 
-/**
- * Fetch EVERY product category (all pages, empty ones included). The Store API
- * ignores `slug`/`parent` filters, so hierarchy has to be derived client-side
- * from each category's `parent` field.
- */
 export async function getAllStoreCategories(): Promise<StoreApiCategory[]> {
-  const perPage = 100;
-  let page = 1;
-  let totalPages = 1;
-  const all: StoreApiCategory[] = [];
-  do {
-    const { data, headers } = await fetchStore<StoreApiCategory[]>(
-      "products/categories",
-      { per_page: perPage, page, hide_empty: "false" }
-    );
-    all.push(...data);
-    totalPages = Number(headers.get("X-WP-TotalPages") ?? 1);
-    page += 1;
-  } while (page <= totalPages);
-  return all;
+  return getStoreCategories();
 }
 
-/**
- * Resolve a single category by slug. Needed for sub-category URLs like
- * /category/tabz that sit beyond the first page of results.
- */
 export async function getStoreCategoryBySlug(
   slug: string
 ): Promise<StoreApiCategory | null> {
-  const all = await getAllStoreCategories();
-  return all.find((c) => c.slug === slug) ?? null;
+  const cats = await getStoreCategories();
+  return cats.find((c) => c.slug === slug) ?? null;
 }
-
-const CWOO_BASE = `${REST_URL.replace(/\/$/, "")}/custom-woo/v1`;
 
 export interface FilteredProductQuery extends StoreProductQuery {
-  categories?: string[]; // category slugs
-  brands?: string[]; // product_brand slugs
+  categories?: string[];
+  brands?: string[];
 }
 
-/**
- * Filtered listing via the custom endpoint — supports the product_brand
- * taxonomy (which the Store API cannot filter) plus multi category slugs.
- */
 export async function getFilteredStoreProducts(
   q: FilteredProductQuery = {}
 ): Promise<StoreProductsResult> {
-  const url = new URL(`${CWOO_BASE}/products`);
-  const set = (k: string, v: string | number | undefined) => {
-    if (v !== undefined && v !== "") url.searchParams.set(k, String(v));
-  };
-  set("page", q.page ?? 1);
-  set("per_page", q.perPage ?? 20);
-  set("search", q.search);
-  set("orderby", q.orderby ?? "date");
-  set("order", q.order ?? "desc");
-  set("min_price", q.minPrice);
-  set("max_price", q.maxPrice);
-  if (q.categories?.length) set("category", q.categories.join(","));
-  if (q.brands?.length) set("brand", q.brands.join(","));
+  let list = [...dummyData.products] as StoreApiProduct[];
 
-  const response = await fetchWithTimeout(url.toString(), {
-    next: { revalidate: ISR_REVALIDATE_SECONDS },
-  });
-  if (!response.ok) {
-    throw new Error(`Filtered products request failed: ${response.status}`);
+  if (q.search) {
+    list = list.filter((p) =>
+      p.name.toLowerCase().includes(q.search!.toLowerCase())
+    );
   }
-  const data = deepDecodeHtmlEntities(await response.json()) as StoreApiProduct[];
+
+  if (q.categories && q.categories.length > 0) {
+    list = list.filter((p) =>
+      p.categories.some((c) => q.categories!.includes(c.slug))
+    );
+  }
+
+  // Filter out marketing materials by default unless requested
+  const requestingMarketing = q.categories && q.categories.includes("marketing-materials");
+  if (!requestingMarketing) {
+    list = list.filter((p) =>
+      !p.categories.some((c) => c.slug === "marketing-materials")
+    );
+  }
+
   return {
-    items: data,
-    total: Number(response.headers.get("X-WP-Total") ?? data.length),
-    totalPages: Number(response.headers.get("X-WP-TotalPages") ?? 1),
+    items: list,
+    total: list.length,
+    totalPages: 1,
   };
 }
 

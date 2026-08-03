@@ -1,0 +1,249 @@
+{
+  "products": [
+    {
+      "id": 49632,
+      "name": "MyZen Poppy & Lotus 6pk 1200mg Tablet - Wild Cherry (10ct Display) PRE-ORDER ONLY",
+      "slug": "myzen-poppy-lotus-6pk-1200mg-tablet-wild-cherry-10ct-display-pre-order-only",
+      "permalink": "/product/myzen-poppy-lotus-6pk-1200mg-tablet-wild-cherry-10ct-display-pre-order-only",
+      "sku": "6PMZPLWC10",
+      "short_description": "Premium relaxation evolved.",
+      "description": "<h1><span style=\"font-weight: 600;\">Premium Relaxation Evolved</span></h1>\r\n<h2><span style=\"font-weight: 800;\">Details</span><b>  </b></h2>\r\n<ul>\r\n \t<li style=\"font-weight: 400;\" aria-level=\"1\"><span style=\"font-weight: 400;\">Does NOT Contain: Kanna, Kratom, 7-OH, Psilocybin, Amanita, or Cannabinoids</span></li>\r\n \t<li style=\"font-weight: 400;\" aria-level=\"1\"><span style=\"font-weight: 400;\">2 servings per tablet</span></li>\r\n \t<li style=\"font-weight: 400;\" aria-level=\"1\"><span style=\"font-weight: 400;\">Made from premium botanical extracts</span></li>\r\n</ul>\r\n<h2><span style=\"font-weight: 800;\">Description</span></h2>\r\n<span style=\"font-weight: 400;\">Introducing the newest line in the MyZen Organix family - MyZen Poppy &amp; Lotus. Our botanical extracts are expertly crafted for consumers seeking deep, restorative, unwind experiences, without having to rely on traditional 7-OH products. Our proprietary Blue Lotus, Poppy, and White Lily blend offers a sophisticated, synergistic approach to mood elevation and a deeply restorative experience.</span>",
+      "on_sale": true,
+      "images": [
+        {
+          "id": 49658,
+          "src": "/placeholder.jpg",
+          "thumbnail": "/placeholder.jpg",
+          "alt": "MyZen Poppy & Lotus 6pk 1200mg Tablet - Wild Cherry (10ct Display) PRE-ORDER ONLY"
+        }
+      ],
+      "categories": [
+        {
+          "id": 1589,
+          "name": "NEW!",
+          "slug": "new",
+          "count": 43,
+          "permalink": ""
+        },
+        {
+          "id": 1385,
+          "name": "Clearance",
+          "slug": "clearance",
+          "count": 235,
+          "permalink": ""
+        }
+      ],
+      "average_rating": "0",
+      "review_count": 0,
+      "is_in_stock": true,
+      "is_on_backorder": true,
+      "prices": {
+        "price": "12000",
+        "regular_price": "19000",
+        "sale_price": "12000",
+        "currency_code": "USD",
+        "currency_symbol": "$",
+        "currency_minor_unit": 2,
+        "currency_decimal_separator": ".",
+        "currency_thousand_separator": ",",
+        "currency_prefix": "$",
+        "currency_suffix": ""
+      }
+    },
+    {
+      "id": 49633,
+      "name": "MyZen Poppy & Lotus 6pk 1200mg Tablet - Exotic Berries (10ct Display)",
+      "slug": "myzen-poppy-lotus-6pk-1200mg-tablet-exotic-berries-10ct-display",
+      "permalink": "/product/myzen-poppy-lotus-6pk-1200mg-tablet-exotic-berries-10ct-display",
+      "sku": "6PMZPLEB10",
+      "short_description": "Exotic berries relaxation tablets.",
+      "description": "Proprietary Blue Lotus and Poppy blend.",
+      "on_sale": false,
+      "images": [
+        {
+          "id": 49659,
+          "src": "/placeholder.jpg",
+          "thumbnail": "/placeholder.jpg",
+          "alt": "MyZen Exotic Berries"
+        }
+      ],
+      "categories": [
+        {
+          "id": 1385,
+          "name": "Clearance",
+          "slug": "clearance",
+          "count": 235,
+          "permalink": ""
+        }
+      ],
+      "average_rating": "4.5",
+      "review_count": 8,
+      "is_in_stock": true,
+      "is_on_backorder": false,
+      "prices": {
+        "price": "20000",
+        "regular_price": "20000",
+        "sale_price": "",
+        "currency_code": "USD",
+        "currency_symbol": "$",
+        "currency_minor_unit": 2,
+        "currency_decimal_separator": ".",
+        "currency_thousand_separator": ",",
+        "currency_prefix": "$",
+        "currency_suffix": ""
+      }
+    },
+    {
+      "id": 49634,
+      "name": "MyZen Poppy & Lotus 6pk 1200mg Tablet - Blueberry Jam (10ct Display)",
+      "slug": "myzen-poppy-lotus-6pk-1200mg-tablet-blueberry-jam-10ct-display",
+      "permalink": "/product/myzen-poppy-lotus-6pk-1200mg-tablet-blueberry-jam-10ct-display",
+      "sku": "6PMZPLBJ10",
+      "short_description": "Blueberry Jam relaxation tablets.",
+      "description": "Proprietary Blue Lotus and Poppy blend.",
+      "on_sale": false,
+      "images": [
+        {
+          "id": 49660,
+          "src": "/placeholder.jpg",
+          "thumbnail": "/placeholder.jpg",
+          "alt": "MyZen Blueberry Jam"
+        }
+      ],
+      "categories": [
+        {
+          "id": 1385,
+          "name": "Clearance",
+          "slug": "clearance",
+          "count": 235,
+          "permalink": ""
+        }
+      ],
+      "average_rating": "5.0",
+      "review_count": 3,
+      "is_in_stock": true,
+      "is_on_backorder": false,
+      "prices": {
+        "price": "20000",
+        "regular_price": "20000",
+        "sale_price": "",
+        "currency_code": "USD",
+        "currency_symbol": "$",
+        "currency_minor_unit": 2,
+        "currency_decimal_separator": ".",
+        "currency_thousand_separator": ",",
+        "currency_prefix": "$",
+        "currency_suffix": ""
+      }
+    },
+    {
+      "id": 49635,
+      "name": "MyZen Poppy & Lotus 2pk 400mg Tablets - Wild Cherry (20ct Display)",
+      "slug": "myzen-poppy-lotus-2pk-400mg-tablets-wild-cherry-20ct-display",
+      "permalink": "/product/myzen-poppy-lotus-2pk-400mg-tablets-wild-cherry-20ct-display",
+      "sku": "2PMZPLWC20",
+      "short_description": "Wild Cherry relaxation 2-pack.",
+      "description": "Proprietary Blue Lotus and Poppy blend.",
+      "on_sale": false,
+      "images": [
+        {
+          "id": 49661,
+          "src": "/placeholder.jpg",
+          "thumbnail": "/placeholder.jpg",
+          "alt": "MyZen 2pk Wild Cherry"
+        }
+      ],
+      "categories": [
+        {
+          "id": 1385,
+          "name": "Clearance",
+          "slug": "clearance",
+          "count": 235,
+          "permalink": ""
+        }
+      ],
+      "average_rating": "0",
+      "review_count": 0,
+      "is_in_stock": true,
+      "is_on_backorder": false,
+      "prices": {
+        "price": "15000",
+        "regular_price": "15000",
+        "sale_price": "",
+        "currency_code": "USD",
+        "currency_symbol": "$",
+        "currency_minor_unit": 2,
+        "currency_decimal_separator": ".",
+        "currency_thousand_separator": ",",
+        "currency_prefix": "$",
+        "currency_suffix": ""
+      }
+    },
+    {
+      "id": 49636,
+      "name": "Marketing Sheet - 6pk Sour Shrumfuzed Max",
+      "slug": "marketing-sheet-6pk-sour-shrumfuzed-max",
+      "permalink": "/product/marketing-sheet-6pk-sour-shrumfuzed-max",
+      "sku": "MSSSM6",
+      "short_description": "Marketing sheet for Shrumfuzed Max.",
+      "description": "Marketing sheet for Shrumfuzed Max.",
+      "on_sale": false,
+      "images": [
+        {
+          "id": 49662,
+          "src": "/placeholder.jpg",
+          "thumbnail": "/placeholder.jpg",
+          "alt": "Marketing Sheet"
+        }
+      ],
+      "categories": [
+        {
+          "id": 1590,
+          "name": "Marketing Materials",
+          "slug": "marketing-materials",
+          "count": 5,
+          "permalink": ""
+        }
+      ],
+      "average_rating": "0",
+      "review_count": 0,
+      "is_in_stock": true,
+      "is_on_backorder": false,
+      "prices": {
+        "price": "100",
+        "regular_price": "100",
+        "sale_price": "",
+        "currency_code": "USD",
+        "currency_symbol": "$",
+        "currency_minor_unit": 2,
+        "currency_decimal_separator": ".",
+        "currency_thousand_separator": ",",
+        "currency_prefix": "$",
+        "currency_suffix": ""
+      }
+    }
+  ],
+  "categories": [
+    {
+      "id": 1589,
+      "name": "NEW!",
+      "slug": "new",
+      "count": 43,
+      "permalink": ""
+    },
+    {
+      "id": 1385,
+      "name": "Clearance",
+      "slug": "clearance",
+      "count": 235,
+      "permalink": ""
+    },
+    {
+      "id": 1590,
+      "name": "Marketing Materials",
+      "slug": "marketing-materials",
+      "count": 5,
+      "permalink": ""
+    }
+  ]
+}

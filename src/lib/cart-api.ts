@@ -1,8 +1,3 @@
-import { REST_URL } from "./env";
-import { reportResponse, reportFetchError } from "./server-status-signal";
-
-const CWOO = `${REST_URL.replace(/\/$/, "")}/custom-woo/v1`;
-
 export interface CartLineItem {
   product_id: number;
   quantity: number;
@@ -67,42 +62,6 @@ export interface PaymentGateway {
   order: number;
 }
 
-async function post<T>(
-  path: string,
-  body: unknown,
-  token?: string | null,
-  timeoutMs = 12000
-): Promise<T> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    let res: Response;
-    try {
-      res = await fetch(`${CWOO}${path}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(body),
-        cache: "no-store",
-        signal: controller.signal,
-      });
-    } catch (err) {
-      // Genuine network failure / timeout / abort → server unreachable.
-      reportFetchError(err);
-      throw err;
-    }
-    // 503 → down, 2xx → up, other 4xx/5xx are app errors (no status change).
-    reportResponse(res);
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error((json as any)?.message || `HTTP ${res.status}`);
-    return json as T;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 export interface TaxRate {
   type: string;
   label: string;
@@ -116,7 +75,6 @@ export interface TaxShippingConfig {
   fees?: FeeLine[];
   exciseEnabled?: boolean;
   exciseLabel?: string;
-  /** Map of product_id → excise tax per unit, for local Σ(unit × qty) calc. */
   excisePerProduct?: Record<string, number>;
   appliedCoupons?: AppliedCoupon[];
   couponErrors?: Array<{ code: string; message: string }>;
@@ -128,29 +86,37 @@ export async function getCartTotals(
     coupons?: string[];
     destination?: CartDestination;
   },
-  token?: string | null
+  _token?: string | null
 ): Promise<CartTotals> {
-  return post<CartTotals>("/cart-totals", payload, token);
+  const subtotal = payload.line_items.reduce((sum, item) => sum + 120 * item.quantity, 0);
+  const discountTotal = payload.coupons?.length ? 20 : 0;
+  const shippingTotal = 15;
+  const total = Math.max(0, subtotal - discountTotal + shippingTotal);
+
+  return {
+    currencySymbol: "$",
+    subtotal: subtotal,
+    subtotalFormatted: `$${subtotal.toFixed(2)}`,
+    discountTotal: discountTotal,
+    discountFormatted: `$${discountTotal.toFixed(2)}`,
+    shippingTotal: shippingTotal,
+    shippingFormatted: `$${shippingTotal.toFixed(2)}`,
+    shippingMethods: [
+      { id: "flat_rate", label: "Flat Rate Shipping", cost: 15, costFormatted: "$15.00" }
+    ],
+    feeTotal: 0,
+    fees: [],
+    taxTotal: 0,
+    taxFormatted: "$0.00",
+    taxLines: [],
+    total: total,
+    totalFormatted: `$${total.toFixed(2)}`,
+    appliedCoupons: payload.coupons?.map(c => ({ code: c, discount: 20, discountFormatted: "$20.00" })) || [],
+    couponErrors: [],
+  };
 }
 
-// ── Shared config cache ───────────────────────────────────────
-// The tax/shipping config is deterministic for a given items + coupons +
-// destination + token. Cache it (with a short TTL) and dedupe in-flight
-// requests so the mini-cart and the cart/checkout pages don't each trigger
-// their own identical call — whichever asks first pays, the rest reuse it.
-const CONFIG_TTL_MS = 60_000;
-const configCache = new Map<string, { ts: number; data: TaxShippingConfig }>();
-const configInflight = new Map<string, Promise<TaxShippingConfig>>();
-
-function configCacheKey(payload: unknown, token?: string | null): string {
-  return JSON.stringify({ payload, token: token || null });
-}
-
-/** Drop cached config (e.g. after placing an order clears the cart). */
-export function invalidateTaxShippingConfig() {
-  configCache.clear();
-  configInflight.clear();
-}
+export function invalidateTaxShippingConfig() {}
 
 export async function getTaxShippingConfig(
   payload: {
@@ -158,54 +124,27 @@ export async function getTaxShippingConfig(
     destination?: CartDestination;
     coupons?: string[];
   },
-  token?: string | null,
-  options?: { force?: boolean }
+  _token?: string | null,
+  _options?: { force?: boolean }
 ): Promise<TaxShippingConfig> {
-  const key = configCacheKey(payload, token);
-
-  if (!options?.force) {
-    const cached = configCache.get(key);
-    if (cached && Date.now() - cached.ts < CONFIG_TTL_MS) {
-      return cached.data;
-    }
-    const inflight = configInflight.get(key);
-    if (inflight) return inflight;
-  }
-
-  const promise = post<TaxShippingConfig>("/tax-shipping-config", payload, token)
-    .then((data) => {
-      configCache.set(key, { ts: Date.now(), data });
-      configInflight.delete(key);
-      return data;
-    })
-    .catch((err) => {
-      configInflight.delete(key);
-      throw err;
-    });
-
-  configInflight.set(key, promise);
-  return promise;
+  return {
+    state: payload.destination?.state || "CA",
+    taxRates: [
+      { type: "sales", label: "Sales Tax", rate: 8.25 }
+    ],
+    shippingMethods: [
+      { id: "flat_rate", label: "Flat Rate Shipping", cost: 15, costFormatted: "$15.00" }
+    ],
+    fees: [],
+    exciseEnabled: false,
+    appliedCoupons: payload.coupons?.map(c => ({ code: c, discount: 20, discountFormatted: "$20.00" })) || [],
+    couponErrors: [],
+  };
 }
 
 export async function getPaymentGateways(): Promise<PaymentGateway[]> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 10000);
-  try {
-    let res: Response;
-    try {
-      res = await fetch(`${CWOO}/payment-gateways`, {
-        cache: "no-store",
-        signal: controller.signal,
-      });
-    } catch (err) {
-      reportFetchError(err);
-      throw err;
-    }
-    reportResponse(res);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } finally {
-    clearTimeout(timer);
-  }
+  return [
+    { id: "cod", title: "Cash on Delivery", description: "Pay with cash upon delivery.", order: 1 },
+    { id: "bacs", title: "Direct Bank Transfer", description: "Make payment directly into our bank account.", order: 2 }
+  ];
 }
