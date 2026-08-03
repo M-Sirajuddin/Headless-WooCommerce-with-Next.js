@@ -24,19 +24,7 @@ function cwoo_maintenance_block() {
         exit;
     }
 }
-// ── ENSURE CUSTOMER PRICING ENVIRONMENT FOR REST REQUESTS ─────
-add_filter( 'woocommerce_product_get_price', 'cwoo_ensure_customer_pricing_env', 1, 2 );
-add_filter( 'woocommerce_product_get_regular_price', 'cwoo_ensure_customer_pricing_env', 1, 2 );
-add_filter( 'woocommerce_product_get_sale_price', 'cwoo_ensure_customer_pricing_env', 1, 2 );
-function cwoo_ensure_customer_pricing_env( $price, $product ) {
-    if ( is_user_logged_in() && function_exists( 'WC' ) ) {
-        if ( null === WC()->customer || WC()->customer->get_id() !== get_current_user_id() ) {
-            WC()->customer = new WC_Customer( get_current_user_id(), true );
-        }
-    }
-    return $price;
-}
-// ─────────────────────────────────────────────────────────────
+
 
 
 // ── CORS ─────────────────────────────────────────────────────
@@ -1362,9 +1350,18 @@ function cwoo_filter_products_run( WP_REST_Request $req ) {
         return new WP_Error( 'no_wc', 'WooCommerce not available.', [ 'status' => 500 ] );
     }
 
-    // Wholesale pricing parity with the Store API for anonymous requests.
-    if ( defined( 'CWOO_WHOLESALE_USER_ID' ) && CWOO_WHOLESALE_USER_ID && ! is_user_logged_in() ) {
+    // Bind WooCommerce customer session to the logged-in user
+    if ( is_user_logged_in() ) {
+        $uid = get_current_user_id();
+        if ( null === WC()->customer || WC()->customer->get_id() !== $uid ) {
+            WC()->customer = new WC_Customer( $uid, true );
+        }
+    } else if ( defined( 'CWOO_WHOLESALE_USER_ID' ) && CWOO_WHOLESALE_USER_ID ) {
+        // Wholesale pricing parity with the Store API for anonymous requests.
         wp_set_current_user( (int) CWOO_WHOLESALE_USER_ID );
+        if ( null === WC()->customer || WC()->customer->get_id() !== (int) CWOO_WHOLESALE_USER_ID ) {
+            WC()->customer = new WC_Customer( (int) CWOO_WHOLESALE_USER_ID, true );
+        }
     }
 
     $page     = max( 1, (int) $req->get_param( 'page' ) ?: 1 );
@@ -1437,7 +1434,8 @@ function cwoo_filter_products_run( WP_REST_Request $req ) {
         $args['meta_query'] = $meta_query;
     }
 
-    $cache_key = 'cwoo_query_' . md5( serialize( $args ) );
+    $uid = get_current_user_id();
+    $cache_key = 'cwoo_query_u' . $uid . '_' . md5( serialize( $args ) );
     $cached = get_transient( $cache_key );
     if ( is_array( $cached ) ) {
         $response = rest_ensure_response( $cached['items'] );
