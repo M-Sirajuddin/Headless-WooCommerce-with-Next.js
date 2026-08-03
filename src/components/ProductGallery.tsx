@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductImage from "@/components/ProductImage";
 import OutOfStockBadge from "@/components/ui/OutOfStockBadge";
@@ -25,7 +25,18 @@ export default function ProductGallery({
 }: ProductGalleryProps) {
   const [active, setActive] = useState(0);
 
-  if (images.length === 0) {
+  // Deduplicate images array by ID to resolve React duplicate key warnings and prevent repeating thumbnails.
+  const uniqueImages = useMemo(() => {
+    const seen = new Set<string>();
+    return images.filter((img) => {
+      const key = img.id || img.sourceUrl;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [images]);
+
+  if (uniqueImages.length === 0) {
     return (
       <div className="relative aspect-square w-full max-w-[540px] mx-auto overflow-hidden border border-black/10">
         <ProductImage src={null} alt={productName} fill className="object-contain p-4" />
@@ -33,9 +44,9 @@ export default function ProductGallery({
     );
   }
 
-  const current = images[Math.min(active, images.length - 1)];
+  const current = uniqueImages[Math.min(active, uniqueImages.length - 1)];
   const go = (dir: number) =>
-    setActive((i) => (i + dir + images.length) % images.length);
+    setActive((i) => (i + dir + uniqueImages.length) % uniqueImages.length);
 
   return (
     <div className="space-y-4">
@@ -52,7 +63,7 @@ export default function ProductGallery({
           className="object-contain p-4"
         />
 
-        {images.length > 1 && (
+        {uniqueImages.length > 1 && (
           <>
             <button
               type="button"
@@ -75,9 +86,9 @@ export default function ProductGallery({
       </div>
 
       {/* Thumbnails — includes the main image first */}
-      {images.length > 1 && (
+      {uniqueImages.length > 1 && (
         <div className="grid grid-cols-5 gap-3 max-w-[540px] mx-auto">
-          {images.map((img, i) => (
+          {uniqueImages.map((img, i) => (
             <button
               type="button"
               key={img.id}
