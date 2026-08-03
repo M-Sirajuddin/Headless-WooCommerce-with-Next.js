@@ -8,7 +8,6 @@ import { useAppDispatch } from "@/hooks/redux";
 import { setAuth } from "@/store/authSlice";
 import { setCartItems, clearCart } from "@/store/cartSlice";
 import { loginUser, fetchUserProfile } from "@/lib/auth-api";
-import { loadCartItems, userCartKey } from "@/store/middleware/localStorageMiddleware";
 
 function LoginContent() {
   const router = useRouter();
@@ -63,7 +62,6 @@ function LoginContent() {
 
     try {
       const result = await loginUser(formData.username, formData.password);
-      localStorage.setItem("woo_auth_token", result.token);
       // Fetch full WooCommerce profile (firstName, lastName, billing, shipping)
       let fullUser = result.user;
       try {
@@ -71,17 +69,7 @@ function LoginContent() {
       } catch {
         // fallback to basic JWT data if profile fetch fails
       }
-      // Read user's saved cart BEFORE dispatching setAuth.
-      // setAuth triggers the middleware which would overwrite woo_cart_user_{id}
-      // with the current (empty/guest) cart if we read after.
-      const userItems = loadCartItems(userCartKey(fullUser.id));
       dispatch(setAuth({ token: result.token, user: fullUser }));
-      // Middleware just overwrote woo_cart_user_{id} with guest cart — fix it now.
-      if (userItems.length > 0) {
-        dispatch(setCartItems(userItems));
-      } else {
-        dispatch(clearCart());
-      }
       setIsSuccess(true);
       setTimeout(() => {
         const redirectTo = searchParams.get("redirect") || "/account";

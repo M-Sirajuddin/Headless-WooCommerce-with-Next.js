@@ -15,7 +15,6 @@ export default function LogoutPage() {
     // Clear auth first so middleware targets the guest key going forward.
     // The user's cart is already persisted in woo_cart_user_{id} by the middleware
     // on every previous action — no extra save needed.
-    localStorage.removeItem("woo_auth_token");
     dispatch(clearAuth());
     dispatch(clearCart()); // guest starts with an empty cart
 

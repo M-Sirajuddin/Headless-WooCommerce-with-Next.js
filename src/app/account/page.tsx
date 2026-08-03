@@ -44,15 +44,14 @@ export default function AccountPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem("woo_auth_token");
-    if (!savedToken && !token) {
+    if (!token) {
       router.push("/login");
     } else {
       setCheckingAuth(false);
     }
   }, [token, router]);
 
-  if (checkingAuth || (!token && !localStorage.getItem("woo_auth_token"))) {
+  if (checkingAuth || !token) {
     return (
       <div className="flex min-h-[300px] flex-col items-center justify-center gap-3 py-12 text-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#d93b2e]" />
