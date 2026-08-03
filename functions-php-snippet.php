@@ -1319,7 +1319,7 @@ function cwoo_map_store_product( $product ) {
         'prices'            => [
             'price'                     => $to_minor( $product->get_price() ),
             'regular_price'             => $to_minor( $product->get_regular_price() ),
-            'sale_price'                => $to_minor( $product->get_sale_price() ),
+            'sale_price'                => $to_minor( ( (float) $product->get_price() < (float) $product->get_regular_price() && ! $product->get_sale_price() ) ? $product->get_price() : $product->get_sale_price() ),
             'currency_code'             => get_woocommerce_currency(),
             'currency_symbol'           => $symbol,
             'currency_minor_unit'       => $minor,
