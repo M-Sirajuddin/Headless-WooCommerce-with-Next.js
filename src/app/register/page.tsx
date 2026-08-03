@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Eye, EyeOff, Lock, Mail, User, CheckCircle, AlertCircle } from "lucide-react";
-import { registerUser } from "@/lib/auth-api";
+import { registerUser } from "@/lib/mock";
 
 export default function RegisterPage() {
   const router = useRouter();

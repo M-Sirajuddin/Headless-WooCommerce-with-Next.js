@@ -6,7 +6,7 @@ import { useState, useTransition, useEffect } from "react";
 import { ChevronRight, Loader2, SlidersHorizontal, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import StoreProductCard from "@/components/StoreProductCard";
-import type { StoreApiProduct, getStoreCategories } from "@/lib/store-api";
+import type { StoreApiProduct, getStoreCategories } from "@/lib/mock";
 import type { CategoryNav } from "@/lib/category-nav";
 
 const BRANDS = ["Dazed", "Brixz NYC", "Shrumfuzed", "Hytz", "Myzen Organix", "Rox"];

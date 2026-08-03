@@ -1,4 +1,4 @@
-import { REST_URL } from '@/lib/env';
+import { REST_URL } from '@/lib/mock';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';

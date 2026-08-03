@@ -1,5 +1,5 @@
 import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
-import { GRAPHQL_URL } from '@/lib/env';
+import { GRAPHQL_URL } from '@/lib/mock';
 
 // `@apollo/client` v4 removed the generic type parameter from `ApolloClient`,
 // so we no longer annotate it with `ApolloClient<unknown>`.

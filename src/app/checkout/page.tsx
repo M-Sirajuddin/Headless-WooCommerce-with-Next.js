@@ -8,8 +8,9 @@ import {
   placeOrder,
   type CheckoutAddress,
   type PlacedOrder,
-} from "@/lib/auth-api";
-import { getPaymentGateways, type PaymentGateway } from "@/lib/cart-api";
+  getPaymentGateways,
+  type PaymentGateway,
+} from "@/lib/mock";
 import { useCartTotals } from "@/hooks/useCartTotals";
 import CouponForm from "@/components/cart/CouponForm";
 import { CheckCircle, Loader2, AlertCircle, ShoppingBag } from "lucide-react";

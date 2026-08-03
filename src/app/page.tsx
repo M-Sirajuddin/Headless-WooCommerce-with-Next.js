@@ -12,8 +12,8 @@ import {
 import RetailProductCard from "@/components/RetailProductCard";
 import ProductImage from "@/components/ProductImage";
 import HomeSlider from "@/components/HomeSlider";
-import { STATIC_PRODUCT_LIMIT, GRAPHQL_URL } from "@/lib/env";
-import { getProducts } from "@/lib/graphql/fetcher";
+import { STATIC_PRODUCT_LIMIT, GRAPHQL_URL } from "@/lib/mock";
+import { getProducts } from "@/lib/mock";
 import type { Product } from "@/types/woocommerce";
 
 // ISR: cache globally for 24 hours, purged on-demand via webhook

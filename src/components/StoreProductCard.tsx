@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import ProductImage from "@/components/ProductImage";
-import type { StoreApiProduct } from "@/lib/store-api";
-import { formatStorePrice } from "@/lib/store-api";
+import type { StoreApiProduct } from "@/lib/mock";
+import { formatStorePrice } from "@/lib/mock";
 import QuickViewModal, { QuickViewProduct } from "@/components/ui/QuickViewModal";
 import AddToCartButton from "@/components/ui/AddToCartButton";
 import type { Product } from "@/types/woocommerce";

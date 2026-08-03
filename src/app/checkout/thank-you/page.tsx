@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle, Loader2, AlertCircle, Clock, XCircle } from "lucide-react";
-import { getOrderStatus, type OrderStatus } from "@/lib/auth-api";
+import { getOrderStatus, type OrderStatus } from "@/lib/mock";
 
 function ThankYouContent() {
   const params = useSearchParams();

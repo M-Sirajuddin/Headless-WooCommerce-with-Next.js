@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Eye, EyeOff, Lock, CheckCircle, AlertCircle } from "lucide-react";
-import { resetPasswordSubmit } from "@/lib/auth-api";
+import { resetPasswordSubmit } from "@/lib/mock";
 
 export default function ResetPasswordPage() {
   const router = useRouter();

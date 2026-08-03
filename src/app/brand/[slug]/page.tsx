@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import ProductCatalog from "@/components/ProductCatalog";
-import { getStoreCategoriesCached as getStoreCategories, getStoreProductsCached as getStoreProducts } from "@/lib/store-api-server";
+import { getStoreCategoriesCached as getStoreCategories, getStoreProductsCached as getStoreProducts } from "@/lib/mock";
 
 const brandMap: Record<string, string> = {
   "dazed": "Dazed",

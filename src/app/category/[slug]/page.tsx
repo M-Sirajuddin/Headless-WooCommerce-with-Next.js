@@ -7,7 +7,7 @@ import {
   getAllStoreCategoriesCached,
   getStoreCategoryBySlugCached,
   getStoreProductsCached as getStoreProducts,
-} from "@/lib/store-api-server";
+} from "@/lib/mock";
 import { buildCategoryNav } from "@/lib/category-nav";
 
 interface PageProps {

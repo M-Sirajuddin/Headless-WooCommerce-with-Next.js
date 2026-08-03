@@ -6,7 +6,7 @@ import { makeStore, type AppStore } from '@/store';
 import { setAuth, setHydrated } from '@/store/authSlice';
 import { setCartItems, clearCart, setCoupons } from '@/store/cartSlice';
 import { setQuoteItems } from '@/store/quoteSlice';
-import { fetchUserProfile } from '@/lib/auth-api';
+import { fetchUserProfile } from '@/lib/mock';
 
 
 export default function StoreProvider({ children }: { children: ReactNode }) {

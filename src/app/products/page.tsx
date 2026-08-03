@@ -6,9 +6,9 @@ import {
   getAllStoreCategoriesCached,
   getFilteredStoreProductsCached,
   getStoreProductsCached,
-} from "@/lib/store-api-server";
+  BRAND_FILTERS
+} from "@/lib/mock";
 import { MAIN_CATEGORY_SLUGS } from "@/lib/category-nav";
-import { BRAND_FILTERS } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "All Products | HEDY STORE",

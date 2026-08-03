@@ -1,5 +1,5 @@
-import type { StoreApiCategory } from "@/lib/store-api";
-import { MAIN_CATEGORY_SLUGS as ENV_MAIN_CATEGORY_SLUGS } from "@/lib/env";
+import type { StoreApiCategory } from "@/lib/mock";
+import { MAIN_CATEGORY_SLUGS as ENV_MAIN_CATEGORY_SLUGS } from "@/lib/mock";
 
 export interface CategoryNavItem {
   id: number;

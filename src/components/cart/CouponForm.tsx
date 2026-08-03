@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Tag, X, Loader2, Check } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { addCoupon, removeCoupon } from "@/store/cartSlice";
-import type { CartTotals } from "@/lib/cart-api";
+import type { CartTotals } from "@/lib/mock";
 
 interface CouponFormProps {
   totals: CartTotals | null;

@@ -10,7 +10,7 @@ import {
   type ShippingMethod,
   type TaxShippingConfig,
   type FeeLine,
-} from "@/lib/cart-api";
+} from "@/lib/mock";
 
 function parsePrice(input: string | null | undefined): number {
   if (!input || typeof input !== "string") return 0;

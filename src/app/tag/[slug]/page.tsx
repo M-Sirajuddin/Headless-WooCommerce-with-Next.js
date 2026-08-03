@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import ProductCatalog from "@/components/ProductCatalog";
-import { getStoreCategoriesCached as getStoreCategories, getStoreProductsCached as getStoreProducts } from "@/lib/store-api-server";
+import { getStoreCategoriesCached as getStoreCategories, getStoreProductsCached as getStoreProducts } from "@/lib/mock";
 
 function getTagName(slug: string): string {
   return slug

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Mail, CheckCircle, AlertCircle } from "lucide-react";
-import { forgotPasswordRequest } from "@/lib/auth-api";
+import { forgotPasswordRequest } from "@/lib/mock";
 
 export default function ForgotPasswordPage() {
   const [emailOrUser, setEmailOrUser] = useState("");

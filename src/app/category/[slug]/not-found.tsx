@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import ProductCatalog from "@/components/ProductCatalog";
-import { getStoreCategoriesCached as getStoreCategories } from "@/lib/store-api-server";
+import { getStoreCategoriesCached as getStoreCategories } from "@/lib/mock";
 
 export default async function CategoryNotFound() {
   let categories: Awaited<ReturnType<typeof getStoreCategories>> = [];

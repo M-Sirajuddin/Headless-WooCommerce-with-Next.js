@@ -1,4 +1,4 @@
-import { PUBLIC_SITE_URL } from "./env";
+import { PUBLIC_SITE_URL } from "./mock";
 
 /**
  * Central site/brand config used across metadata, structured data,

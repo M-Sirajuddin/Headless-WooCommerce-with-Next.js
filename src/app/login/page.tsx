@@ -7,7 +7,7 @@ import { ChevronRight, Eye, EyeOff, Lock, User, CheckCircle, AlertCircle } from 
 import { useAppDispatch } from "@/hooks/redux";
 import { setAuth } from "@/store/authSlice";
 import { setCartItems, clearCart } from "@/store/cartSlice";
-import { loginUser, fetchUserProfile } from "@/lib/auth-api";
+import { loginUser, fetchUserProfile } from "@/lib/mock";
 
 function LoginContent() {
   const router = useRouter();

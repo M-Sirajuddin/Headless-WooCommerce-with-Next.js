@@ -3,7 +3,7 @@ import { siteConfig } from "@/lib/seo";
 import {
   getStoreCategoriesCached,
   getStoreProductsCached,
-} from "@/lib/store-api-server";
+} from "@/lib/mock";
 
 export const revalidate = 3600; // refresh the sitemap hourly
 

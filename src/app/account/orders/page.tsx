@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { setOrders } from "@/store/authSlice";
-import { fetchUserOrders } from "@/lib/auth-api";
+import { fetchUserOrders } from "@/lib/mock";
 import { Package, Loader2, Calendar, ReceiptText, ChevronDown } from "lucide-react";
 
 export default function OrdersPage() {

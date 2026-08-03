@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { updateUser } from "@/store/authSlice";
-import { updateUserProfile } from "@/lib/auth-api";
+import { updateUserProfile } from "@/lib/mock";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
 export default function SettingsPage() {

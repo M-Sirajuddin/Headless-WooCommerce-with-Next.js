@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
-import { fetchQuoteRequests, submitQuoteRequest, submitMultiQuoteRequest } from "@/lib/auth-api";
+import { fetchQuoteRequests, submitQuoteRequest, submitMultiQuoteRequest } from "@/lib/mock";
 import { removeQuoteItem, updateQuoteQuantity, clearQuote } from "@/store/quoteSlice";
 import ProductImage from "@/components/ProductImage";
 import { FileText, Plus, X, Loader2, CheckCircle2, AlertCircle, Minus, Trash2, Send } from "lucide-react";

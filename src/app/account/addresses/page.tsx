@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { updateBillingAddress, updateShippingAddress } from "@/store/authSlice";
-import { updateUserAddresses } from "@/lib/auth-api";
+import { updateUserAddresses } from "@/lib/mock";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
 export default function AddressesPage() {
