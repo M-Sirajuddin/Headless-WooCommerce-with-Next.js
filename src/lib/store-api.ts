@@ -91,7 +91,6 @@ function fetchWithTimeout(url: string, options: RequestInit & { next?: any } = {
 
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
-    nextOpts.revalidate = 0; // Bypass static cache for logged-in users
   }
 
   return fetch(url, {

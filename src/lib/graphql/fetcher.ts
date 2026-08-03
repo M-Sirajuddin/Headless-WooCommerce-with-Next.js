@@ -14,9 +14,33 @@ const FETCH_TIMEOUT_MS = 15000;
 function fetchWithTimeout(url: string, options: RequestInit & { next?: any } = {}): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  return fetch(url, { ...options, signal: controller.signal }).finally(() =>
-    clearTimeout(timer)
-  );
+
+  // Try to retrieve JWT Bearer token dynamically
+  let token: string | undefined;
+  if (typeof window === "undefined") {
+    try {
+      const { cookies } = require("next/headers");
+      token = cookies().get("woo_auth_token")?.value;
+    } catch {
+      // Cookies context might not be available during static generation
+    }
+  } else {
+    token = localStorage.getItem("woo_auth_token") || undefined;
+  }
+
+  const headers = new Headers(options.headers);
+  let nextOpts = options.next ? { ...options.next } : {};
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  return fetch(url, {
+    ...options,
+    headers,
+    next: nextOpts,
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timer));
 }
 
 async function storeApiFetch<T>(
